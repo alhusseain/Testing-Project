@@ -257,4 +257,31 @@ public class Main {
 
         return template;
     }
+
+    // =========================================================================
+    //  TESTING INTERFACE (The "Diagnostic Port" for Black Box Testing)
+    // =========================================================================
+
+    /**
+     * TEST HOOK 1: Returns the active background color.
+     * Allows the test driver to verify visual changes without a screenshot.
+     */
+    public static Color getInternalThemeColor() {
+        if (theme != null) {
+            return theme.emptyBackground;
+        }
+        return null;
+    }
+
+    /**
+     * TEST HOOK 2: Resets the app to Factory Settings.
+     * Essential for isolating tests so one test doesn't ruin the next one.
+     */
+    public static void resetConfiguration() {
+        currency = "USD";
+        currencyChar = "$";
+        if (theme != null) {
+            theme.change(themes.LIGHT);
+        }
+    }
 }
