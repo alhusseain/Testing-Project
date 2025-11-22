@@ -299,5 +299,36 @@ public class WebData {
         public String toString() {
             return name;
         }
+        // testing getters
+        public String getName() { return name; }
+        public String getSymbol() { return symbol; }
+        public int getRank() { return rank; }
+        public double getPrice() { return price; }
+        public double getMarketCap() { return market_cap; }
+        public double get24hVolume() { return _24h_volume; }
+        public double getAvailableSupply() { return available_supply; }
+        public double getTotalSupply() { return total_supply; }
+        public double getMaxSupply() { return max_supply; }
+        public double getPercentChange1h() { return percent_change_1h; }
+        public double getPercentChange24h() { return percent_change_24h; }
+        public double getPercentChange7d() { return percent_change_7d; }
+        public String getLastUpdated() { return last_updated; }
+        
+        public double getPortfolioAmount() { return portfolio_amount; }
+        public double getPortfolioPrice() { return portfolio_price; }
+        public double getPortfolioValue() { return portfolio_value; }
+        public double getPortfolioGains() { return portfolio_gains; }
+        public String getPortfolioCurrency() { return portfolio_currency; }
+        public double getPortfolioPriceStart() { return portfolio_price_start; }
+        public double getPortfolioValueStart() { return portfolio_value_start; }
+        
+        // testing setters
+        public void setPortfolioAmount(double amount) { portfolio_amount = amount; }
+        public void setPortfolioPrice(double price) { portfolio_price = price; }
+        public void setPortfolioValue(double value) { portfolio_value = value; }
+        public void setPortfolioGains(double gains) { portfolio_gains = gains; }
+        public void setPortfolioCurrency(String currency) { portfolio_currency = currency; }
+        public void setPortfolioPriceStart(double priceStart) { portfolio_price_start = priceStart; }
+        public void setPortfolioValueStart(double valueStart) { portfolio_value_start = valueStart; }
     }
 }

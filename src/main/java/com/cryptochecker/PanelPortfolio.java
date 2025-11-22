@@ -721,4 +721,36 @@ public class PanelPortfolio {
             webData.portfolio.get(nr).get(i).last_updated = coin.last_updated;
         }
     }
+// For testing purposes
+    public boolean testFindPortfolioName(String name) {
+        return findPortfolioName(name);
+    }
+
+    public WebData.Coin testGetPortfolioName(String name) {
+        return getPortfolioName(name);
+    }
+
+    public JPanel getPanel() {
+        return panel;
+    }
+
+    public JTable getTable() {
+        return table;
+    }
+
+    public JEditorPane getOverviewText() {
+        return overviewText;
+    }
+
+    public int getCurrentPortfolioNumber() {
+        return nr;
+    }
+
+    public ArrayList<String> getPortfolioNames() {
+        return names;
+    }
+
+    public WebData getWebData() {
+        return webData;
+    }
 }
