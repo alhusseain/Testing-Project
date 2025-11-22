@@ -1,4 +1,4 @@
-package com.cryptochecker.userinterface;
+package com.cryptocheckertest.userinterface;
 
 import static org.junit.jupiter.api.Assertions.*;
 
