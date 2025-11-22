@@ -187,6 +187,15 @@ public class WebData {
             + "\nActive Markets: " + active_markets
             + "\nLast Updated: " + last_updated;
         }
+
+        // Public getters for testing
+        public long getTotalMarketCap() { return total_market_cap; }
+        public long getTotal24hVolume() { return total_24h_volume; }
+        public double getBitcoinPercentage() { return bitcoin_percentage_of_market_cap; }
+        public int getActiveCurrencies() { return active_currencies; }
+        public int getActiveAssets() { return active_assets; }
+        public int getActiveMarkets() { return active_markets; }
+        public long getLastUpdated() { return last_updated; }
     }
 
     public Coin getCoin() {

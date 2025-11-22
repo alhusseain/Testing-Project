@@ -560,4 +560,86 @@ public class PanelConverter {
             ex.printStackTrace();
         }
     }
+
+    // ========================================
+    // PUBLIC GETTERS AND METHODS FOR TESTING
+    // ========================================
+    
+    // Currency button getters
+    public JButton getButtonCurrency1() { return buttonCurrency1; }
+    public JButton getButtonCurrency2() { return buttonCurrency2; }
+    
+    // Price getters and setters
+    public double getPriceCurrency1() { return priceCurrency1; }
+    public double getPriceCurrency2() { return priceCurrency2; }
+    public void setPriceCurrency1(double price) { priceCurrency1 = price; }
+    public void setPriceCurrency2(double price) { priceCurrency2 = price; }
+    
+    // Field getters
+    public JTextField getFieldCurrency1() { return fieldCurrency1; }
+    public JTextField getFieldCurrency2() { return fieldCurrency2; }
+    
+    // Info getters and setters
+    public String getInfoCurrency1() { return infoCurrency1; }
+    public String getInfoCurrency2() { return infoCurrency2; }
+    public void setInfoCurrency1(String info) { infoCurrency1 = info; }
+    public void setInfoCurrency2(String info) { infoCurrency2 = info; }
+    
+    // Overview components
+    public JEditorPane getOverviewText() { return overviewText; }
+    public JEditorPane getTextBox1() { return textBox1; }
+    public JEditorPane getTextBox2() { return textBox2; }
+    
+    // Public wrapper for private methods
+    public String testCalculateCurrency(double amount) {
+        return calculateCurrency(amount);
+    }
+    
+    public void testCalculateGlobal() {
+        calculateGlobal();
+    }
+    
+    public void testRetrieveText(int box, String info) {
+        retrieveText(box, info);
+    }
+    
+    public void testSerialize() {
+        serialize();
+    }
+    
+    public void testDeserialize() {
+        deserialize();
+    }
+    
+    // Test helper methods
+    public void setupTestCurrencies(String currency1Name, String currency2Name, double price1, double price2) {
+        if (buttonCurrency1 != null) buttonCurrency1.setText(currency1Name);
+        if (buttonCurrency2 != null) buttonCurrency2.setText(currency2Name);
+        priceCurrency1 = price1;
+        priceCurrency2 = price2;
+    }
+    
+    public void simulateSwitch() {
+        if (priceCurrency2 == 0 || priceCurrency1 == 0) {
+            return; // Cannot switch with zero prices
+        }
+        
+        String button1 = buttonCurrency1.getText();
+        String button2 = buttonCurrency2.getText();
+        String field1 = fieldCurrency1.getText();
+        String field2 = fieldCurrency2.getText();
+        Double price1 = priceCurrency1;
+        Double price2 = priceCurrency2;
+        String info1 = infoCurrency1;
+        String info2 = infoCurrency2;
+
+        buttonCurrency1.setText(button2);
+        buttonCurrency2.setText(button1);
+        fieldCurrency1.setText(field2);
+        fieldCurrency2.setText(field1);
+        priceCurrency1 = price2;
+        priceCurrency2 = price1;
+        retrieveText(1, info2);
+        retrieveText(2, info1);
+    }
 }
