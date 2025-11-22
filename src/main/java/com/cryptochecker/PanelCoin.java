@@ -22,12 +22,18 @@ public class PanelCoin {
 
     private TableRowSorter<TableModel> rowSorter;
     private JTextField headerSearchField;
-
     private final int rowHeight = 40;
     private final int amountHeaderButtons = 1;
     private final int rightHeaderFilling = 50;
     private final int headerSearchSize = 15;
     private final Dimension searchFieldSize = new Dimension(Main.panelWidth*2, Main.panelHeight-10);
+
+    public JTable getTable() {
+        return table;
+    }
+    public JTextField getHeaderSearchField() {
+        return headerSearchField;
+    }
 
     public PanelCoin() {
         panel = new JPanel();
