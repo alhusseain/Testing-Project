@@ -21,7 +21,7 @@ public class Main {
 
     public static String currency = "USD";
     public static String currencyChar = "$";
-
+ 
     public static enum themes { LIGHT, DARK, CUSTOM };
     public static Theme theme;
 

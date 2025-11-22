@@ -11,7 +11,7 @@ public class PanelSettings {
     public JPanel panel;
 
     private JButton bTheme;
-    private JButton bCurrency;
+    public JButton bCurrency;
     private JButton bDebug;
 
     private JFrame colorFrame;
@@ -393,7 +393,7 @@ public class PanelSettings {
         content9field.setForeground(Main.theme.foreground);
     }
 
-    private void serialize() {
+    public void serialize() {
         try { // save settings to data
             FileOutputStream file = new FileOutputStream(Main.settingsSerLocation);
             BufferedOutputStream buffer = new BufferedOutputStream(file);
@@ -410,7 +410,7 @@ public class PanelSettings {
         }
     }
 
-    private class bThemeListener implements ActionListener {
+    public class bThemeListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             Debug.log("Button Theme Clicked");
 
@@ -445,7 +445,7 @@ public class PanelSettings {
         }
     }
 
-    private class bCurrencyListener implements ActionListener {
+    public class bCurrencyListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             Debug.log("Button Currency Pressed");
             Debug.log("-- Changing currency");
@@ -516,7 +516,7 @@ public class PanelSettings {
         }
     }
 
-    private class bResetListener implements ActionListener {
+    public class bResetListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             Debug.log("Button Reset Settings Pressed");
 
@@ -557,7 +557,7 @@ public class PanelSettings {
         }
     }
 
-    private class bDeleteListener implements ActionListener {
+    public class bDeleteListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             Debug.log("Button Delete Data Pressed");
             ArrayList<JCheckBox> deleteList = new ArrayList<JCheckBox>();
