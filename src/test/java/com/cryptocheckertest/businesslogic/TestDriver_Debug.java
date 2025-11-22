@@ -1,39 +1,45 @@
 package com.cryptocheckertest.businesslogic;
 
-
 import com.cryptochecker.Debug;
 import com.cryptochecker.Main;
 
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 
-
 /**
- * BLACK BOX TEST SUITE: DEBUG MODULE
+ * MASTER RTM TEST SUITE: DEBUG MODULE
  * -------------------------------------------------
- * Target: Debug.java
- * Type: Functional / IO Testing
- * Access: External (Public API only)
+ * Covers: TC-58, TC-59, TC-60, TC-61 (Functional)
+ * Covers: TC-64, TC-65 (Structural)
  * -------------------------------------------------
  */
 public class TestDriver_Debug {
 
     public static void main(String[] args) {
         System.out.println("==========================================");
-        System.out.println("   STARTING BLACK BOX TEST: DEBUG MODULE  ");
+        System.out.println("   STARTING DEBUG MODULE TEST SUITE       ");
         System.out.println("==========================================\n");
 
-        // SETUP: Launch Main to ensure 'Main.logLocation' or folder paths are set
+        // SETUP: Launch Main
         Thread appThread = new Thread(() -> {
             try { Main.main(new String[]{}); } catch (Exception e) {}
         });
         appThread.start();
 
-        try { Thread.sleep(1500); } catch (InterruptedException e) {}
+        // Wait for initialization
+        try { Thread.sleep(2000); } catch (InterruptedException e) {}
 
-        // --- EXECUTE TEST CASES ---
-        test_DebugModeToggle();
-        test_LogPersistence();
+        // --- SECTION 1: FUNCTIONAL TESTS ---
+        TC_58_Event_Logging();
+        TC_59_Debug_Window_UI();
+        TC_60_Auto_Scroll_Stability();
+        TC_61_Window_Sync(); // <--- NEW TEST
+
+        // --- SECTION 2: STRUCTURAL TESTS ---
+        TC_64_Debug_Mode_Toggle();
+        TC_65_Log_Append_Logic();
 
         System.out.println("\n==========================================");
         System.out.println("   DEBUG MODULE TESTING FINISHED");
@@ -41,66 +47,97 @@ public class TestDriver_Debug {
         System.exit(0);
     }
 
-    /**
-     * TC-DBG-01: Verify Debug Mode Toggle
-     * Requirement: FR-053 (Existing)
-     */
-    public static void test_DebugModeToggle() {
-        System.out.print("[TC-DBG-01]  Checking Debug Mode Toggle...... ");
+    // ... (Keep TC-58, TC-59, TC-60 same as before) ...
 
-        // Set to True
-        Debug.mode = true;
-        if (Debug.mode == true) {
-            // Set to False
-            Debug.mode = false;
-            if (Debug.mode == false) {
-                System.out.println("PASS");
-                return;
+    public static void TC_58_Event_Logging() {
+        System.out.print("[TC-58] Event Logging Timestamp..... ");
+        String msg = "TC58_EVENT";
+        Debug.log(msg);
+        File logFile = new File(System.getProperty("user.home") + "/.crypto-checker/log.txt");
+        boolean found = false;
+        try (BufferedReader br = new BufferedReader(new FileReader(logFile))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.contains(msg) && line.contains(":")) found = true;
             }
+        } catch (Exception e) {}
+        if (found) System.out.println("PASS");
+        else System.out.println("FAIL");
+    }
+
+    public static void TC_59_Debug_Window_UI() {
+        System.out.print("[TC-59] Debug Window Visibility..... ");
+        Debug.setDebugMode(true);
+        if (Debug.frame != null && Debug.frame.isVisible()) System.out.println("PASS");
+        else System.out.println("FAIL");
+        Debug.setDebugMode(false);
+    }
+
+    public static void TC_60_Auto_Scroll_Stability() {
+        System.out.print("[TC-60] Auto-scroll Stability....... ");
+        try {
+            Debug.setDebugMode(true);
+            for (int i = 0; i < 20; i++) Debug.log("Scroll Line " + i);
+            System.out.println("PASS");
+        } catch (Exception e) {
+            System.out.println("FAIL");
         }
-        System.out.println("FAIL (Variable did not update)");
+        Debug.setDebugMode(false);
     }
 
     /**
-     * TC-DBG-02: Verify Log File Writing (Persistence)
-     * Requirement: FR-BB-02
+     * TC-61: Window Sync
+     * Simulates clicking the "X" button and checks if 'mode' becomes false.
      */
-    public static void test_LogPersistence() {
-        System.out.print("[TC-DBG-02]  Checking Log File Persistence... ");
+    public static void TC_61_Window_Sync() {
+        System.out.print("[TC-61] Window Close Sync (UI)...... ");
 
-        // 1. Generate a unique key to search for
-        String uniqueTestKey = "TEST_ID_" + System.currentTimeMillis();
+        // 1. Open Window
+        Debug.setDebugMode(true);
 
-        // 2. INPUT: Send data to the Black Box (Debug Class)
-        try {
-            Debug.log("AUTOMATED TEST: " + uniqueTestKey);
-        } catch (Exception e) {
-            System.out.println("FAIL (Exception during logging: " + e.getMessage() + ")");
-            return;
+        if (Debug.frame != null) {
+            // 2. Simulate the OS "Close Window" event
+            Debug.frame.dispatchEvent(new WindowEvent(Debug.frame, WindowEvent.WINDOW_CLOSING));
+
+            // Give the event loop a moment to process
+            try { Thread.sleep(500); } catch (Exception e) {}
+
+            // 3. Verify the mode variable automatically flipped to false
+            if (Debug.getDebugMode() == false) {
+                System.out.println("PASS");
+            } else {
+                System.out.println("FAIL (Mode remained TRUE after closing window)");
+            }
+        } else {
+            System.out.println("SKIP (Frame not created)");
         }
+    }
 
-        // 3. VERIFY: Open the file externally and search for the key
-        // Note: Reconstructing path based on your Main.java logic
-        String logPath = System.getProperty("user.home") + "/.crypto-checker/log.txt";
+    // ... (Keep TC-64 and TC-65 same as before) ...
+
+    public static void TC_64_Debug_Mode_Toggle() {
+        System.out.print("[TC-64] Debug Logic Toggle.......... ");
+        Debug.setDebugMode(true);
+        if (Debug.getDebugMode()) {
+            Debug.setDebugMode(false);
+            if (!Debug.getDebugMode()) System.out.println("PASS");
+            else System.out.println("FAIL");
+        } else System.out.println("FAIL");
+    }
+
+    public static void TC_65_Log_Append_Logic() {
+        System.out.print("[TC-65] Log Persistence (Append).... ");
+        String uniqueID = "TC65_" + System.currentTimeMillis();
+        Debug.log(uniqueID);
+        File logFile = new File(System.getProperty("user.home") + "/.crypto-checker/log.txt");
         boolean found = false;
-
-        try (BufferedReader br = new BufferedReader(new FileReader(logPath))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(logFile))) {
             String line;
             while ((line = br.readLine()) != null) {
-                if (line.contains(uniqueTestKey)) {
-                    found = true;
-                    break;
-                }
+                if (line.contains(uniqueID)) found = true;
             }
-        } catch (Exception e) {
-            System.out.println("FAIL (Could not read log file at " + logPath + ")");
-            return;
-        }
-
-        if (found) {
-            System.out.println("PASS");
-        } else {
-            System.out.println("FAIL (Unique key '" + uniqueTestKey + "' not found in log)");
-        }
+        } catch (Exception e) {}
+        if (found) System.out.println("PASS");
+        else System.out.println("FAIL");
     }
 }

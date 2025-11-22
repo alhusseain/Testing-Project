@@ -53,4 +53,20 @@ public class Debug {
         }
 
     }
+
+    // =============================================================
+    //  TESTING HOOKS (Added for TestDriver_Debug.java)
+    // =============================================================
+
+    public static void setDebugMode(boolean active) {
+        mode = active;
+        // If the window is already created, update its visibility immediately
+        if (frame != null) {
+            frame.setVisible(active);
+        }
+    }
+
+    public static boolean getDebugMode() {
+        return mode;
+    }
 }
