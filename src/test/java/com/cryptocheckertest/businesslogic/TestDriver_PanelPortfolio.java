@@ -2,35 +2,50 @@ package com.cryptocheckertest.businesslogic;
 
 import com.cryptochecker.Main;
 import com.cryptochecker.PanelPortfolio;
-import com.cryptochecker.Debug;
 import com.cryptochecker.WebData;
 
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import javax.swing.*;
-import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * MASTER RTM TEST SUITE: PANEL PORTFOLIO MODULE
  * -------------------------------------------------
  * Covers: TC-27, TC-28, TC-29 (Portfolio Management)
- * Covers: TC-30, TC-31, TC-32 (Portfolio Operations)
+ * Covers: TC-30, TC-31, TC-32 (Portfolio Operations) 
+ * Covers: TC-33, TC-34, TC-35, TC-36, TC-37, TC-38, TC-39 (Portfolio Validation)
  * -------------------------------------------------
  * Tests the bManagePortfolioListener functionality:
  * - New portfolio creation with duplicate handling
  * - Portfolio renaming with validation 
  * - Portfolio deletion with minimum enforcement
+ * - Portfolio calculation and data validation
+ * - HTML generation and currency conversion
+ * - Input validation and serialization
  */
+@ExtendWith(MockitoExtension.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TestDriver_PanelPortfolio {
 
-    private static PanelPortfolio panelPortfolio;
+    private static volatile boolean applicationInitialized = false;
+    private static Thread appThread;
+    private PanelPortfolio testPanel;
 
-    public static void main(String[] args) {
+    @BeforeAll
+    static void setupApplication() {
         System.out.println("==========================================");
         System.out.println("  STARTING PORTFOLIO MODULE TEST SUITE   ");
         System.out.println("==========================================\n");
 
-        // SETUP: Launch Main application
-        Thread appThread = new Thread(() -> {
+        // Launch Main application
+        appThread = new Thread(() -> {
             try { 
                 Main.main(new String[]{}); 
             } catch (Exception e) {
@@ -42,48 +57,61 @@ public class TestDriver_PanelPortfolio {
         // Wait for initialization to complete
         try { 
             Thread.sleep(3000); 
+            applicationInitialized = true;
             System.out.println("Application initialization complete.\n");
         } catch (InterruptedException e) {
             System.out.println("Initialization interrupted.");
+            fail("Application initialization failed");
         }
+    }
 
-        // Initialize portfolio panel for testing
+    @BeforeEach
+    void setupTest() {
+        // Initialize fresh PanelPortfolio for each test
         try {
-            SwingUtilities.invokeAndWait(() -> {
-                panelPortfolio = new PanelPortfolio();
+            final CountDownLatch latch = new CountDownLatch(1);
+            final Exception[] setupException = {null};
+            
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    testPanel = new PanelPortfolio();
+                } catch (Exception e) {
+                    setupException[0] = e;
+                } finally {
+                    latch.countDown();
+                }
             });
-            System.out.println("PanelPortfolio instance created successfully.\n");
+            
+            if (!latch.await(5, TimeUnit.SECONDS)) {
+                fail("Test setup timeout");
+            }
+            
+            if (setupException[0] != null) {
+                throw setupException[0];
+            }
+            
+            assertNotNull(testPanel, "PanelPortfolio should be initialized");
         } catch (Exception e) {
-            System.out.println("Failed to create PanelPortfolio: " + e.getMessage());
-            return;
+            fail("Failed to initialize PanelPortfolio for test: " + e.getMessage());
         }
+    }
 
-        // --- SECTION 1: CORE PORTFOLIO MANAGEMENT TESTS ---
-        TC_27_New_Portfolio_Creation();
-        TC_28_Portfolio_Renaming_Validation();
-        TC_29_Portfolio_Deletion_Enforcement();
+    @AfterEach
+    void cleanupTest() {
+        // Reset any test modifications to ensure test isolation
+        if (testPanel != null) {
+            testPanel = null;
+        }
+    }
 
-        // --- SECTION 2: BUSINESS LOGIC VALIDATION TESTS ---
-        TC_30_Duplicate_Name_Handling();
-        TC_31_Minimum_Portfolio_Requirement();
-        TC_32_Portfolio_Data_Integrity();
-
-        // --- SECTION 3: PORTFOLIO CALCULATION TESTS ---
-        TC_33_Portfolio_Value_Calculation();
-        TC_34_Portfolio_Gains_Losses_Calculation();
-        TC_35_HTML_Portfolio_Display();
-
-        // --- SECTION 4: ADVANCED FUNCTIONALITY TESTS ---
-        TC_36_Currency_Conversion_Handling();
-        TC_37_Input_Validation();
-        TC_38_Duplicate_Entry_Prevention();
-        TC_39_Portfolio_Data_Serialization();
-
+    @AfterAll
+    static void teardownApplication() {
+        if (appThread != null && appThread.isAlive()) {
+            appThread.interrupt();
+        }
         System.out.println("\n==========================================");
-        System.out.println("  COMPLETE PORTFOLIO MODULE TESTING FINISHED");
-        System.out.println("  Total Test Cases: TC-27 through TC-39 (13 tests)");
+        System.out.println("   PORTFOLIO MODULE TEST SUITE COMPLETE   ");
         System.out.println("==========================================");
-        System.exit(0);
     }
 
     /**
@@ -91,7 +119,10 @@ public class TestDriver_PanelPortfolio {
      * Tests the "New Portfolio" option (case 2) from bManagePortfolioListener
      * Verifies: Portfolio count increases, proper naming convention, duplicate resolution
      */
-    public static void TC_27_New_Portfolio_Creation() {
+    @Test
+    @Order(1)
+    @DisplayName("TC-27: New Portfolio Creation")
+    void testNewPortfolioCreation() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -152,42 +183,28 @@ public class TestDriver_PanelPortfolio {
             System.out.println("\nVALIDATION RESULTS:");
             
             int expectedCount = initialCount + 1;
-            boolean countValid = actualCount == expectedCount;
-            System.out.println("  Portfolio Count - Expected: " + expectedCount + ", Actual: " + actualCount + 
-                              " → " + (countValid ? "  PASS" : "  FAIL"));
+            System.out.println("  Portfolio Count - Expected: " + expectedCount + ", Actual: " + actualCount);
             
             int expectedNameCount = initialNameCount + 1;
-            boolean nameCountValid = actualNameCount == expectedNameCount;
-            System.out.println("  Names Count - Expected: " + expectedNameCount + ", Actual: " + actualNameCount + 
-                              " → " + (nameCountValid ? "  PASS" : "  FAIL"));
+            System.out.println("  Names Count - Expected: " + expectedNameCount + ", Actual: " + actualNameCount);
             
-            boolean nameFormatValid = actualFinalName.startsWith("Portfolio ");
-            System.out.println("  Name Format - Expected: starts with 'Portfolio ', Actual: '" + actualFinalName + 
-                              "' → " + (nameFormatValid ? "  PASS" : "  FAIL"));
+            System.out.println("  Name Format - Expected: starts with 'Portfolio ', Actual: '" + actualFinalName + "'");
             
-            boolean duplicateHandled = !duplicateFound || actualFinalName.endsWith(" ");
             System.out.println("  Duplicate Handling - Expected: proper resolution, Actual: " + 
-                              (duplicateFound ? "space appended" : "no duplicates") + 
-                              " → " + (duplicateHandled ? "  PASS" : "  FAIL"));
+                              (duplicateFound ? "space appended" : "no duplicates"));
             
-            // FINAL RESULT
-            boolean overallPass = countValid && nameCountValid && nameFormatValid && duplicateHandled;
-            System.out.println("\nTC-27 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
+            // JUnit Assertions
+            assertEquals(expectedCount, actualCount, "Portfolio count should increase after creation");
+            assertEquals(expectedNameCount, actualNameCount, "Names count should match portfolio count");
+            assertTrue(actualFinalName.startsWith("Portfolio "), "Portfolio name should follow 'Portfolio X' format");
+            assertTrue(!duplicateFound || actualFinalName.endsWith(" "), "Duplicate names should be resolved properly");
             
-            if (!overallPass) {
-                System.out.println("FAILURE DETAILS:");
-                if (!countValid) System.out.println("  • Portfolio count mismatch");
-                if (!nameCountValid) System.out.println("  • Names count mismatch");  
-                if (!nameFormatValid) System.out.println("  • Invalid naming convention");
-                if (!duplicateHandled) System.out.println("  • Duplicate resolution failed");
-            }
+            System.out.println("\n✅ TC-27: New Portfolio Creation - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\nTC-27 RESULT:   FAIL");
-            System.out.println("EXCEPTION DETAILS:");
-            System.out.println("  Error: " + e.getMessage());
-            System.out.println("  Type: " + e.getClass().getSimpleName());
-            e.printStackTrace();
+            System.out.println("\n❌ TC-27: New Portfolio Creation - FAILED");
+            System.out.println("EXCEPTION: " + e.getMessage());
+            fail("TC-27 failed due to exception: " + e.getMessage());
         }
         
         System.out.println(border);
@@ -198,7 +215,10 @@ public class TestDriver_PanelPortfolio {
      * Tests the "Rename Current" option (case 0) from bManagePortfolioListener
      * Verifies: Duplicate detection, error handling, name preservation on conflict
      */
-    public static void TC_28_Portfolio_Renaming_Validation() {
+    @Test
+    @Order(2)
+    @DisplayName("TC-28: Portfolio Renaming Validation")
+    void testPortfolioRenaming() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -249,11 +269,12 @@ public class TestDriver_PanelPortfolio {
             }
             
             String actualNameAfterValid = Main.gui.webData.portfolio_names.get(targetIndex);
-            boolean validRenameWorked = actualNameAfterValid.equals(uniqueNewName);
             
             System.out.println("VALIDATION - Valid Rename:");
-            System.out.println("  Expected: '" + uniqueNewName + "', Actual: '" + actualNameAfterValid + 
-                              "' → " + (validRenameWorked ? "  PASS" : "  FAIL"));
+            System.out.println("  Expected: '" + uniqueNewName + "', Actual: '" + actualNameAfterValid + "'");
+            
+            // JUnit Assertion for valid rename
+            assertEquals(uniqueNewName, actualNameAfterValid, "Valid rename operation should succeed");
             
             // TEST 2: Invalid Rename (Equivalence Partition - Invalid)
             System.out.println("\nTEST 2: INVALID RENAME (Duplicate Name)");
@@ -282,37 +303,28 @@ public class TestDriver_PanelPortfolio {
             }
             
             String actualNameAfterInvalid = Main.gui.webData.portfolio_names.get(targetIndex);
-            boolean duplicateRenameRejected = actualNameAfterInvalid.equals(nameBeforeDuplicateTest);
             
             System.out.println("VALIDATION - Invalid Rename:");
-            System.out.println("  Expected: '" + nameBeforeDuplicateTest + "' (unchanged), Actual: '" + actualNameAfterInvalid + 
-                              "' → " + (duplicateRenameRejected ? "  PASS" : "  FAIL"));
-            System.out.println("  Duplicate Detection: " + (isDuplicateInvalid ? "  PASS" : "  FAIL"));
+            System.out.println("  Expected: '" + nameBeforeDuplicateTest + "' (unchanged), Actual: '" + actualNameAfterInvalid + "'");
+            System.out.println("  Duplicate Detection: " + (isDuplicateInvalid ? "DETECTED" : "NOT DETECTED"));
             
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  Current portfolio names: " + Main.gui.webData.portfolio_names);
             
-            boolean overallPass = validRenameWorked && duplicateRenameRejected && isDuplicateInvalid;
-            System.out.println("\nTC-28 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
-            
-            if (!overallPass) {
-                System.out.println("FAILURE DETAILS:");
-                if (!validRenameWorked) System.out.println("  • Valid rename failed to execute");
-                if (!duplicateRenameRejected) System.out.println("  • Duplicate rename was not properly rejected");
-                if (!isDuplicateInvalid) System.out.println("  • Duplicate detection logic failed");
-            }
+            // JUnit Assertions
+            assertEquals(nameBeforeDuplicateTest, actualNameAfterInvalid, "Duplicate rename should be properly rejected");
+            assertTrue(isDuplicateInvalid, "Duplicate detection logic should work correctly");
             
             // CLEANUP
             Main.gui.webData.portfolio_names.set(targetIndex, originalName);
             System.out.println("Cleanup: Reset to original name '" + originalName + "'");
+            System.out.println("\n✅ TC-28: Portfolio Renaming Validation - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\nTC-28 RESULT:   FAIL");
-            System.out.println("EXCEPTION DETAILS:");
-            System.out.println("  Error: " + e.getMessage());
-            System.out.println("  Type: " + e.getClass().getSimpleName());
-            e.printStackTrace();
+            System.out.println("\n❌ TC-28: Portfolio Renaming Validation - FAILED");
+            System.out.println("EXCEPTION: " + e.getMessage());
+            fail("TC-28 failed due to exception: " + e.getMessage());
         }
         
         System.out.println(border);
@@ -323,7 +335,10 @@ public class TestDriver_PanelPortfolio {
      * Tests the "Delete Current" option (case 1) from bManagePortfolioListener
      * Verifies: Successful deletion when multiple portfolios, prevention when only one remains
      */
-    public static void TC_29_Portfolio_Deletion_Enforcement() {
+    @Test
+    @Order(3)
+    @DisplayName("TC-29: Portfolio Deletion Enforcement")
+    void testPortfolioDeletion() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -362,15 +377,17 @@ public class TestDriver_PanelPortfolio {
             }
             
             int countAfterDeletion = Main.gui.webData.portfolio.size();
-            boolean deletionWorked = (countAfterDeletion == initialCount - 1) && deletionExecuted;
             String newFirstPortfolio = Main.gui.webData.portfolio_names.size() > 0 ? 
                                      Main.gui.webData.portfolio_names.get(0) : "NONE";
             
             System.out.println("VALIDATION - Valid Deletion:");
-            System.out.println("  Expected count: " + (initialCount - 1) + ", Actual: " + countAfterDeletion + 
-                              " → " + (countAfterDeletion == initialCount - 1 ? "  PASS" : "  FAIL"));
-            System.out.println("  Deletion executed: " + (deletionExecuted ? "  PASS" : "  FAIL"));
+            System.out.println("  Expected count: " + (initialCount - 1) + ", Actual: " + countAfterDeletion);
+            System.out.println("  Deletion executed: " + deletionExecuted);
             System.out.println("  New first portfolio: '" + newFirstPortfolio + "'");
+            
+            // JUnit Assertions for valid deletion
+            assertEquals(initialCount - 1, countAfterDeletion, "Portfolio count should decrease after deletion");
+            assertTrue(deletionExecuted, "Deletion should be executed when above boundary");
             
             // TEST 2: Boundary Enforcement (At Boundary - Minimum Value)
             System.out.println("\nTEST 2: BOUNDARY ENFORCEMENT AT MINIMUM");
@@ -400,34 +417,28 @@ public class TestDriver_PanelPortfolio {
                 System.out.println("  Debug log would be: 'Cannot delete portfolio, only one left'");
             }
             
-            boolean minimumEnforced = !canDeleteWhenOne && Main.gui.webData.portfolio.size() == 1;
             
             System.out.println("VALIDATION - Boundary Enforcement:");
-            System.out.println("  Expected count: 1 (minimum), Actual: " + finalCount + 
-                              " → " + (finalCount == 1 ? "  PASS" : "  FAIL"));
-            System.out.println("  Deletion prevented: " + (!canDeleteWhenOne ? "  PASS" : "  FAIL"));
-            System.out.println("  Minimum enforced: " + (minimumEnforced ? "  PASS" : "  FAIL"));
+            System.out.println("  Expected count: 1 (minimum), Actual: " + finalCount);
+            System.out.println("  Deletion prevented: " + !canDeleteWhenOne);
+            System.out.println("  Minimum enforced: " + (!canDeleteWhenOne && Main.gui.webData.portfolio.size() == 1));
             
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  Current portfolio count: " + Main.gui.webData.portfolio.size());
             System.out.println("  Current portfolio names: " + Main.gui.webData.portfolio_names);
             
-            boolean overallPass = deletionWorked && minimumEnforced;
-            System.out.println("\nTC-29 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
+            // JUnit Assertions
+            assertEquals(1, finalCount, "Should achieve boundary condition (size = 1)");
+            assertFalse(canDeleteWhenOne, "Deletion should be prevented at minimum boundary");
+            assertEquals(1, Main.gui.webData.portfolio.size(), "Portfolio data should remain intact");
             
-            if (!overallPass) {
-                System.out.println("FAILURE DETAILS:");
-                if (!deletionWorked) System.out.println("  • Valid deletion above boundary failed");
-                if (!minimumEnforced) System.out.println("  • Minimum portfolio enforcement failed at boundary");
-            }
+            System.out.println("\n✅ TC-29: Portfolio Deletion Enforcement - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\nTC-29 RESULT:   FAIL");
-            System.out.println("EXCEPTION DETAILS:");
-            System.out.println("  Error: " + e.getMessage());
-            System.out.println("  Type: " + e.getClass().getSimpleName());
-            e.printStackTrace();
+            System.out.println("\n❌ TC-29: Portfolio Deletion Enforcement - FAILED");
+            System.out.println("EXCEPTION: " + e.getMessage());
+            fail("TC-29 failed due to exception: " + e.getMessage());
         }
         
         System.out.println(border);
@@ -438,7 +449,10 @@ public class TestDriver_PanelPortfolio {
      * Tests the duplicate name resolution logic with space appending
      * Verifies: Automatic conflict resolution, name uniqueness preservation
      */
-    public static void TC_30_Duplicate_Name_Handling() {
+    @Test
+    @Order(4)
+    @DisplayName("TC-30: Duplicate Name Handling")
+    void testDuplicateNameHandling() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -519,26 +533,19 @@ public class TestDriver_PanelPortfolio {
             }
             
             System.out.println("\nVALIDATION RESULTS:");
-            System.out.println("  Duplicate detected: " + (duplicateFound ? "  PASS" : "  FAIL") +
+            System.out.println("  Duplicate detected: " + duplicateFound +
                               (duplicateFound ? " (at index " + duplicateAtIndex + ")" : ""));
             System.out.println("  Name before: '" + nameBeforeResolution + "', after: '" + finalName + "'");
-            System.out.println("  Space appended: " + (finalName.endsWith(" ") ? "  PASS" : "  FAIL"));
-            System.out.println("  Resolution applied: " + (duplicateResolved ? "  PASS" : "  FAIL"));
-            System.out.println("  Uniqueness preserved: " + (nameUniquenessPreserved ? "  PASS" : "  FAIL"));
+            System.out.println("  Space appended: " + finalName.endsWith(" "));
             
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  Final portfolio count: " + Main.gui.webData.portfolio_names.size());
             System.out.println("  Final portfolio names: " + Main.gui.webData.portfolio_names);
             
-            boolean overallPass = duplicateResolved && nameUniquenessPreserved;
-            System.out.println("\nTC-30 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
-            
-            if (!overallPass) {
-                System.out.println("FAILURE DETAILS:");
-                if (!duplicateResolved) System.out.println("  • Duplicate resolution logic failed to execute properly");
-                if (!nameUniquenessPreserved) System.out.println("  • Name uniqueness was not maintained after resolution");
-            }
+            // JUnit Assertions
+            assertTrue(duplicateResolved, "Duplicate resolution logic should execute properly");
+            assertTrue(nameUniquenessPreserved, "Name uniqueness should be maintained after resolution");
             
             // CLEANUP: Remove test entries
             Main.gui.webData.portfolio_names.remove(newItemIndex);
@@ -546,13 +553,12 @@ public class TestDriver_PanelPortfolio {
                 Main.gui.webData.portfolio_names.remove(Main.gui.webData.portfolio_names.size() - 1);
             }
             System.out.println("Cleanup: Removed test portfolios, back to " + Main.gui.webData.portfolio_names.size() + " portfolios");
+            System.out.println("\n✅ TC-30: Duplicate Name Handling - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\nTC-30 RESULT:   FAIL");
-            System.out.println("EXCEPTION DETAILS:");
-            System.out.println("  Error: " + e.getMessage());
-            System.out.println("  Type: " + e.getClass().getSimpleName());
-            e.printStackTrace();
+            System.out.println("\n❌ TC-30: Duplicate Name Handling - FAILED");
+            System.out.println("EXCEPTION: " + e.getMessage());
+            fail("TC-30 failed due to exception: " + e.getMessage());
         }
         
         System.out.println(border);
@@ -563,7 +569,10 @@ public class TestDriver_PanelPortfolio {
      * Tests the business rule that at least one portfolio must always exist
      * Verifies: Enforcement of minimum portfolio constraint
      */
-    public static void TC_31_Minimum_Portfolio_Requirement() {
+    @Test
+    @Order(5)
+    @DisplayName("TC-31: Minimum Portfolio Requirement")
+    void testMinimumPortfolioRequirement() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -614,26 +623,10 @@ public class TestDriver_PanelPortfolio {
             // VALIDATION: Multiple constraint checks
             System.out.println("\nVALIDATION - BOUNDARY ANALYSIS:");
             
-            // Test 1: Exactly at boundary (size = 1)
-            boolean atBoundary = (finalCount == 1);
-            System.out.println("  At boundary (size = 1): " + (atBoundary ? "  PASS" : "  FAIL"));
-            
-            // Test 2: Deletion prevention
-            boolean deletionPrevented = !deletionAllowed;
-            System.out.println("  Deletion prevented: " + (deletionPrevented ? "  PASS" : "  FAIL"));
-            
-            // Test 3: Portfolio still exists
-            boolean portfolioExists = (Main.gui.webData.portfolio.size() == 1) && 
-                                    (Main.gui.webData.portfolio_names.size() == 1);
-            System.out.println("  Portfolio still exists: " + (portfolioExists ? "  PASS" : "  FAIL"));
-            
-            // Test 4: Data consistency
-            boolean dataConsistent = (Main.gui.webData.portfolio.size() == Main.gui.webData.portfolio_names.size());
-            System.out.println("  Data consistency: " + (dataConsistent ? "  PASS" : "  FAIL"));
-            
-            // Test 5: Business rule enforcement
-            boolean businessRuleEnforced = atBoundary && deletionPrevented && portfolioExists;
-            System.out.println("  Business rule enforced: " + (businessRuleEnforced ? "  PASS" : "  FAIL"));
+            System.out.println("  At boundary (size = 1): " + (finalCount == 1));
+            System.out.println("  Deletion prevented: " + !deletionAllowed);
+            System.out.println("  Portfolio still exists: " + (Main.gui.webData.portfolio.size() == 1 && Main.gui.webData.portfolio_names.size() == 1));
+            System.out.println("  Data consistency: " + (Main.gui.webData.portfolio.size() == Main.gui.webData.portfolio_names.size()));
             
             // EDGE CASE TESTING
             System.out.println("\nEDGE CASE ANALYSIS:");
@@ -648,23 +641,19 @@ public class TestDriver_PanelPortfolio {
             System.out.println("  Current portfolio names: " + Main.gui.webData.portfolio_names);
             System.out.println("  Minimum constraint status: " + (Main.gui.webData.portfolio.size() >= 1 ? "SATISFIED" : "VIOLATED"));
             
-            boolean overallPass = atBoundary && deletionPrevented && portfolioExists && dataConsistent;
-            System.out.println("\nTC-31 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
+            // JUnit Assertions
+            assertEquals(1, finalCount, "Should achieve boundary condition (size = 1)");
+            assertFalse(deletionAllowed, "Deletion should be prevented at minimum boundary");
+            assertEquals(1, Main.gui.webData.portfolio.size(), "Portfolio should still exist");
+            assertEquals(1, Main.gui.webData.portfolio_names.size(), "Portfolio names should still exist");
+            assertEquals(Main.gui.webData.portfolio.size(), Main.gui.webData.portfolio_names.size(), "Data should be consistent between portfolio lists");
             
-            if (!overallPass) {
-                System.out.println("FAILURE DETAILS:");
-                if (!atBoundary) System.out.println("  • Failed to achieve boundary condition (size = 1)");
-                if (!deletionPrevented) System.out.println("  • Deletion not prevented at minimum boundary");
-                if (!portfolioExists) System.out.println("  • Portfolio data corrupted or missing");
-                if (!dataConsistent) System.out.println("  • Data inconsistency between portfolio lists");
-            }
+            System.out.println("\n✅ TC-31: Minimum Portfolio Requirement - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\nTC-31 RESULT:   FAIL");
-            System.out.println("EXCEPTION DETAILS:");
-            System.out.println("  Error: " + e.getMessage());
-            System.out.println("  Type: " + e.getClass().getSimpleName());
-            e.printStackTrace();
+            System.out.println("\n❌ TC-31: Minimum Portfolio Requirement - FAILED");
+            System.out.println("EXCEPTION: " + e.getMessage());
+            fail("TC-31 failed due to exception: " + e.getMessage());
         }
         
         System.out.println(border);
@@ -675,7 +664,10 @@ public class TestDriver_PanelPortfolio {
      * Tests that portfolio operations maintain data consistency across state changes
      * Verifies: Portfolio list and name list stay synchronized through operations
      */
-    public static void TC_32_Portfolio_Data_Integrity() {
+    @Test
+    @Order(6)
+    @DisplayName("TC-32: Portfolio Data Integrity")
+    void testPortfolioDataIntegrity() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -693,8 +685,10 @@ public class TestDriver_PanelPortfolio {
             System.out.println("  Portfolio contents: " + Main.gui.webData.portfolio);
             System.out.println("  Name contents: " + Main.gui.webData.portfolio_names);
             
-            boolean initialSync = initialPortfolioCount == initialNameCount;
-            System.out.println("  Initial synchronization: " + (initialSync ? "  PASS" : "  FAIL"));
+            System.out.println("  Initial synchronization: " + (initialPortfolioCount == initialNameCount));
+            
+            // JUnit assertion for initial state
+            assertEquals(initialPortfolioCount, initialNameCount, "Initial portfolio and name lists should be synchronized");
             
             // STATE TRANSITION 1: ADD OPERATION
             System.out.println("\nSTATE TRANSITION 1: ADD OPERATION");
@@ -705,13 +699,13 @@ public class TestDriver_PanelPortfolio {
             
             int postAddPortfolioCount = Main.gui.webData.portfolio.size();
             int postAddNameCount = Main.gui.webData.portfolio_names.size();
-            boolean addStateSync = postAddPortfolioCount == postAddNameCount;
-            boolean addCountCorrect = (postAddPortfolioCount == initialPortfolioCount + 1);
             
             System.out.println("  After ADD - Portfolio size: " + postAddPortfolioCount + 
                               ", Name size: " + postAddNameCount);
-            System.out.println("  Add synchronization: " + (addStateSync ? "  PASS" : "  FAIL"));
-            System.out.println("  Add count increment: " + (addCountCorrect ? "  PASS" : "  FAIL"));
+            
+            // JUnit assertions for add operation
+            assertEquals(postAddPortfolioCount, postAddNameCount, "Portfolio and name lists should remain synchronized after add");
+            assertEquals(initialPortfolioCount + 1, postAddPortfolioCount, "Portfolio count should increment by 1 after add");
             
             // STATE TRANSITION 2: RENAME OPERATION
             System.out.println("\nSTATE TRANSITION 2: RENAME OPERATION");
@@ -723,16 +717,15 @@ public class TestDriver_PanelPortfolio {
             
             int postRenamePortfolioCount = Main.gui.webData.portfolio.size();
             int postRenameNameCount = Main.gui.webData.portfolio_names.size();
-            boolean renameStateSync = postRenamePortfolioCount == postRenameNameCount;
-            boolean renameCountUnchanged = (postRenamePortfolioCount == postAddPortfolioCount);
-            boolean renameExecuted = Main.gui.webData.portfolio_names.get(0).equals(newName);
             
             System.out.println("  Original name: '" + originalName + "' → New name: '" + newName + "'");
             System.out.println("  After RENAME - Portfolio size: " + postRenamePortfolioCount + 
                               ", Name size: " + postRenameNameCount);
-            System.out.println("  Rename synchronization: " + (renameStateSync ? "  PASS" : "  FAIL"));
-            System.out.println("  Count preservation: " + (renameCountUnchanged ? "  PASS" : "  FAIL"));
-            System.out.println("  Rename executed: " + (renameExecuted ? "  PASS" : "  FAIL"));
+            
+            // JUnit assertions for rename operation
+            assertEquals(postRenamePortfolioCount, postRenameNameCount, "Portfolio and name lists should remain synchronized after rename");
+            assertEquals(postAddPortfolioCount, postRenamePortfolioCount, "Portfolio count should remain unchanged after rename");
+            assertEquals(newName, Main.gui.webData.portfolio_names.get(0), "Rename operation should be executed successfully");
             
             // STATE TRANSITION 3: DELETE OPERATION
             System.out.println("\nSTATE TRANSITION 3: DELETE OPERATION");
@@ -754,15 +747,17 @@ public class TestDriver_PanelPortfolio {
             
             int postDeletePortfolioCount = Main.gui.webData.portfolio.size();
             int postDeleteNameCount = Main.gui.webData.portfolio_names.size();
-            boolean deleteStateSync = postDeletePortfolioCount == postDeleteNameCount;
-            boolean deleteCountCorrect = canDelete ? 
-                (postDeletePortfolioCount == preDeletePortfolioCount - 1) :
-                (postDeletePortfolioCount == preDeletePortfolioCount);
             
             System.out.println("  After DELETE - Portfolio size: " + postDeletePortfolioCount + 
                               ", Name size: " + postDeleteNameCount);
-            System.out.println("  Delete synchronization: " + (deleteStateSync ? "  PASS" : "  FAIL"));
-            System.out.println("  Delete count management: " + (deleteCountCorrect ? "  PASS" : "  FAIL"));
+            
+            // JUnit assertions for delete operation
+            assertEquals(postDeletePortfolioCount, postDeleteNameCount, "Portfolio and name lists should remain synchronized after delete");
+            if (canDelete) {
+                assertEquals(preDeletePortfolioCount - 1, postDeletePortfolioCount, "Portfolio count should decrease by 1 when deletion is allowed");
+            } else {
+                assertEquals(preDeletePortfolioCount, postDeletePortfolioCount, "Portfolio count should remain unchanged when deletion is not allowed");
+            }
             
             // COMPREHENSIVE DATA INTEGRITY ANALYSIS
             System.out.println("\nCOMPREHENSIVE DATA INTEGRITY ANALYSIS:");
@@ -770,9 +765,7 @@ public class TestDriver_PanelPortfolio {
             // Check 1: List synchronization
             int finalPortfolioCount = Main.gui.webData.portfolio.size();
             int finalNameCount = Main.gui.webData.portfolio_names.size();
-            boolean finalSync = finalPortfolioCount == finalNameCount;
-            System.out.println("  Final list synchronization: " + (finalSync ? "  PASS" : "  FAIL") +
-                              " (Portfolio: " + finalPortfolioCount + ", Names: " + finalNameCount + ")");
+            System.out.println("  Final list synchronization: (Portfolio: " + finalPortfolioCount + ", Names: " + finalNameCount + ")");
             
             // Check 2: Name validity
             boolean allNamesValid = true;
@@ -783,7 +776,7 @@ public class TestDriver_PanelPortfolio {
                     allNamesValid = false;
                 }
             }
-            System.out.println("  All names valid: " + (allNamesValid ? "  PASS" : "  FAIL"));
+            System.out.println("  All names valid: " + allNamesValid);
             
             // Check 3: Portfolio objects exist
             boolean allPortfoliosExist = true;
@@ -793,15 +786,9 @@ public class TestDriver_PanelPortfolio {
                     allPortfoliosExist = false;
                 }
             }
-            System.out.println("  All portfolio objects exist: " + (allPortfoliosExist ? "  PASS" : "  FAIL"));
+            System.out.println("  All portfolio objects exist: " + allPortfoliosExist);
             
-            // Check 4: Minimum constraint respected
-            boolean minimumRespected = finalPortfolioCount >= 1;
-            System.out.println("  Minimum constraint (≥1): " + (minimumRespected ? "  PASS" : "  FAIL"));
-            
-            // Check 5: State transition consistency
-            boolean stateTransitionsValid = initialSync && addStateSync && renameStateSync && deleteStateSync;
-            System.out.println("  All state transitions valid: " + (stateTransitionsValid ? "  PASS" : "  FAIL"));
+            System.out.println("  Minimum constraint (≥1): " + (finalPortfolioCount >= 1));
             
             // FINAL STATE VALIDATION
             System.out.println("\nFINAL STATE:");
@@ -809,31 +796,25 @@ public class TestDriver_PanelPortfolio {
             System.out.println("  Current name count: " + finalNameCount);
             System.out.println("  Current portfolio names: " + Main.gui.webData.portfolio_names);
             
-            boolean overallIntegrity = finalSync && allNamesValid && allPortfoliosExist && 
-                                     minimumRespected && stateTransitionsValid;
-            System.out.println("\nTC-32 RESULT: " + (overallIntegrity ? "  PASS" : "  FAIL"));
-            
-            if (!overallIntegrity) {
-                System.out.println("FAILURE DETAILS:");
-                if (!finalSync) System.out.println("  • Portfolio and name lists are out of sync");
-                if (!allNamesValid) System.out.println("  • Invalid names detected in portfolio names");
-                if (!allPortfoliosExist) System.out.println("  • Null portfolio objects detected");
-                if (!minimumRespected) System.out.println("  • Minimum portfolio constraint violated");
-                if (!stateTransitionsValid) System.out.println("  • State transitions caused data corruption");
-            }
+            // JUnit Assertions
+            assertEquals(finalPortfolioCount, finalNameCount, "Portfolio and name lists should remain synchronized");
+            assertTrue(allNamesValid, "All portfolio names should be valid");
+            assertTrue(allPortfoliosExist, "All portfolio objects should exist (no nulls)");
+            assertTrue(finalPortfolioCount >= 1, "Portfolio count should meet minimum constraint (≥1)");
+            assertNotNull(Main.gui.webData.portfolio, "Portfolio list should not be null");
+            assertNotNull(Main.gui.webData.portfolio_names, "Portfolio names list should not be null");
             
             // CLEANUP: Restore original name if changed
-            if (renameExecuted && !newName.equals(originalName)) {
+            if (!newName.equals(originalName)) {
                 Main.gui.webData.portfolio_names.set(0, originalName);
                 System.out.println("Cleanup: Restored original name '" + originalName + "'");
             }
+            System.out.println("\n✅ TC-32: Portfolio Data Integrity - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\nTC-32 RESULT:   FAIL");
-            System.out.println("EXCEPTION DETAILS:");
-            System.out.println("  Error: " + e.getMessage());
-            System.out.println("  Type: " + e.getClass().getSimpleName());
-            e.printStackTrace();
+            System.out.println("\n❌ TC-32: Portfolio Data Integrity - FAILED");
+            System.out.println("EXCEPTION: " + e.getMessage());
+            fail("TC-32 failed due to exception: " + e.getMessage());
         }
         
         System.out.println(border);
@@ -844,7 +825,10 @@ public class TestDriver_PanelPortfolio {
      * Tests PanelPortfolio.calculatePortfolio() for real-time total value calculation
      * Verifies: Current market price integration, portfolio total calculation accuracy
      */
-    public static void TC_33_Portfolio_Value_Calculation() {
+    @Test
+    @Order(7)
+    @DisplayName("TC-33: Portfolio Value Calculation")
+    void testPortfolioValueCalculation() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -895,9 +879,9 @@ public class TestDriver_PanelPortfolio {
             boolean methodCallSuccessful = methodExecuted[0] && executionException[0] == null;
             
             System.out.println("VALIDATION - Method Execution:");
-            System.out.println("  Method executed: " + (methodExecuted[0] ? "  PASS" : "  FAIL"));
-            System.out.println("  No exceptions: " + (executionException[0] == null ? "  PASS" : "  FAIL"));
-            System.out.println("  Panel instance created: " + (testPanel[0] != null ? "  PASS" : "  FAIL"));
+            System.out.println("  Method executed: " + methodExecuted[0]);
+            System.out.println("  No exceptions: " + (executionException[0] == null));
+            System.out.println("  Panel instance created: " + (testPanel[0] != null));
             
             if (executionException[0] != null) {
                 System.out.println("  Exception details: " + executionException[0].getMessage());
@@ -910,9 +894,9 @@ public class TestDriver_PanelPortfolio {
             boolean panelInitialized = panelExists && testPanel[0].panel != null;
             boolean webDataExists = panelExists && testPanel[0].webData != null;
             
-            System.out.println("  Panel created successfully: " + (panelExists ? "  PASS" : "  FAIL"));
-            System.out.println("  UI components initialized: " + (panelInitialized ? "  PASS" : "  FAIL"));
-            System.out.println("  WebData connection exists: " + (webDataExists ? "  PASS" : "  FAIL"));
+            System.out.println("  Panel created successfully: " + panelExists);
+            System.out.println("  UI components initialized: " + panelInitialized);
+            System.out.println("  WebData connection exists: " + webDataExists);
             
             // Test actual portfolio calculation effect
             if (panelExists) {
@@ -945,8 +929,8 @@ public class TestDriver_PanelPortfolio {
             
             boolean consistentResults = allCallsSuccessful[0] && successfulCalls[0] == 3;
             
-            System.out.println("  Multiple calls successful: " + (allCallsSuccessful[0] ? "  PASS" : "  FAIL"));
-            System.out.println("  Results consistency: " + (consistentResults ? "  PASS" : "  FAIL"));
+            System.out.println("  Multiple calls successful: " + allCallsSuccessful[0]);
+            System.out.println("  Results consistency: " + consistentResults);
             
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
@@ -955,7 +939,12 @@ public class TestDriver_PanelPortfolio {
             
             boolean overallPass = methodCallSuccessful && panelInitialized && consistentResults;
             
-            System.out.println("\nTC-33 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
+            System.out.println("\nTC-33 RESULT: " + (overallPass ? "PASSED" : "FAILED"));
+            
+            // JUnit Assertions for TC-33
+            assertTrue(methodCallSuccessful, "Method call should be successful");
+            assertTrue(panelInitialized, "Panel should be properly initialized");
+            assertTrue(consistentResults, "Method calls should produce consistent results");
             
             if (!overallPass) {
                 System.out.println("FAILURE DETAILS:");
@@ -986,7 +975,10 @@ public class TestDriver_PanelPortfolio {
      * Tests PanelPortfolio.calculatePortfolio() and refreshPortfolio() for profit/loss analysis
      * Verifies: Purchase vs current price comparison, gain/loss percentage calculation using actual data
      */
-    public static void TC_34_Portfolio_Gains_Losses_Calculation() {
+    @Test
+    @Order(8)
+    @DisplayName("TC-34: Portfolio Gains/Losses Calculation")
+    void testPortfolioGainsLossesCalculation() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -1034,7 +1026,10 @@ public class TestDriver_PanelPortfolio {
             });
             
             boolean refreshSuccessful = refreshExecuted[0] && refreshException[0] == null;
-            System.out.println("  Refresh method executed: " + (refreshSuccessful ? "  PASS" : "  FAIL"));
+            System.out.println("  Refresh method executed: " + refreshSuccessful);
+            
+            // JUnit Assertion for refresh
+            assertTrue(refreshSuccessful, "Refresh method should execute successfully");
             
             // TEST 2: Verify Actual Portfolio Calculation Logic
             System.out.println("\nTEST 2: ACTUAL PORTFOLIO CALCULATION VALIDATION");
@@ -1064,7 +1059,10 @@ public class TestDriver_PanelPortfolio {
                 
                 System.out.println("  Total Portfolio Value: $" + totalValue);
                 System.out.println("  Total Gains/Losses: $" + totalGains);
-                System.out.println("  Portfolio has data: " + (hasPortfolioData ? "  PASS" : "  FAIL"));
+                System.out.println("  Portfolio has data: " + hasPortfolioData);
+                
+                // JUnit Assertion for portfolio data
+                assertTrue(hasPortfolioData, "Portfolio should have data to calculate");
                 
                 // TEST 3: Call Actual calculatePortfolio() Method
                 System.out.println("\nTEST 3: ACTUAL CALCULATE PORTFOLIO METHOD");
@@ -1087,7 +1085,10 @@ public class TestDriver_PanelPortfolio {
                 });
                 
                 boolean calculateSuccessful = calculateExecuted[0] && calculateException[0] == null;
-                System.out.println("  Calculate method executed: " + (calculateSuccessful ? "  PASS" : "  FAIL"));
+                System.out.println("  Calculate method executed: " + calculateSuccessful);
+                
+                // JUnit Assertion for calculate method
+                assertTrue(calculateSuccessful, "Calculate method should execute successfully");
                 
                 // TEST 4: Validate Method Results Using Getters
                 System.out.println("\nTEST 4: VALIDATE ACTUAL CALCULATION RESULTS");
@@ -1098,7 +1099,10 @@ public class TestDriver_PanelPortfolio {
                     boolean overviewUpdated = overviewText != null && overviewText.getText() != null && 
                                             !overviewText.getText().trim().isEmpty();
                     
-                    System.out.println("  Overview UI updated: " + (overviewUpdated ? "  PASS" : "  FAIL"));
+                    System.out.println("  Overview UI updated: " + overviewUpdated);
+                    
+                    // JUnit Assertion for overview update
+                    assertTrue(overviewUpdated, "Overview UI should be updated with portfolio data");
                     
                     if (overviewUpdated) {
                         String htmlContent = overviewText.getText();
@@ -1108,8 +1112,12 @@ public class TestDriver_PanelPortfolio {
                         boolean hasNumbers = htmlContent.matches(".*\\d+.*");
                         boolean hasFormatting = htmlContent.contains("<") && htmlContent.contains(">");
                         
-                        System.out.println("  Contains numerical data: " + (hasNumbers ? "  PASS" : "  FAIL"));
-                        System.out.println("  Contains HTML formatting: " + (hasFormatting ? "  PASS" : "  FAIL"));
+                        System.out.println("  Contains numerical data: " + hasNumbers);
+                        System.out.println("  Contains HTML formatting: " + hasFormatting);
+                        
+                        // JUnit Assertions for content validation
+                        assertTrue(hasNumbers, "Portfolio display should contain numerical data");
+                        assertTrue(hasFormatting, "Portfolio display should contain HTML formatting");
                     }
                 }
                 
@@ -1132,7 +1140,10 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
                 
-                System.out.println("  Portfolio data consistency: " + (portfolioDataConsistent ? "  PASS" : "  FAIL"));
+                System.out.println("  Portfolio data consistency: " + portfolioDataConsistent);
+                
+                // JUnit Assertion for data consistency
+                assertTrue(portfolioDataConsistent, "Portfolio calculations should be consistent");
                 
                 // FINAL VALIDATION
                 System.out.println("\nFINAL STATE:");
@@ -1140,21 +1151,15 @@ public class TestDriver_PanelPortfolio {
                 System.out.println("  calculatePortfolio() method: Updates UI components");
                 System.out.println("  Data validation: Verifies calculation accuracy");
                 
-                boolean overallPass = refreshSuccessful && calculateSuccessful && portfolioDataConsistent;
+                // JUnit Assertions
+                assertTrue(refreshSuccessful, "refreshPortfolio() method should execute successfully");
+                assertTrue(calculateSuccessful, "calculatePortfolio() method should execute successfully");
+                assertTrue(portfolioDataConsistent, "Portfolio data should be consistent after calculations");
                 
-                System.out.println("\nTC-34 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
-                
-                if (!overallPass) {
-                    System.out.println("FAILURE DETAILS:");
-                    if (!refreshSuccessful) System.out.println("  • refreshPortfolio() method execution failed");
-                    if (!calculateSuccessful) System.out.println("  • calculatePortfolio() method execution failed");
-                    if (!portfolioDataConsistent) System.out.println("  • Portfolio data consistency validation failed");
-                    System.out.println("  • These failures indicate actual bugs in the application!");
-                }
+                System.out.println("\n✅ TC-34: Portfolio Gains/Losses Calculation - PASSED");
                 
             } else {
-                System.out.println("\nTC-34 RESULT:   FAIL");
-                System.out.println("  Could not proceed - panel creation or refresh failed");
+                fail("Could not proceed - panel creation or refresh failed");
             }
             
             // CLEANUP: Restore original state
@@ -1162,12 +1167,9 @@ public class TestDriver_PanelPortfolio {
             System.out.println("Cleanup: Restored original portfolio index");
             
         } catch (Exception e) {
-            System.out.println("\nTC-34 RESULT:   FAIL");
-            System.out.println("EXCEPTION DETAILS:");
-            System.out.println("  Error: " + e.getMessage());
-            System.out.println("  Type: " + e.getClass().getSimpleName());
-            System.out.println("  This exception indicates a real issue in the actual application!");
-            e.printStackTrace();
+            System.out.println("\n❌ TC-34: Portfolio Gains/Losses Calculation - FAILED");
+            System.out.println("EXCEPTION: " + e.getMessage());
+            fail("TC-34 failed due to exception: " + e.getMessage());
         }
         
         System.out.println(border);
@@ -1178,7 +1180,10 @@ public class TestDriver_PanelPortfolio {
      * Tests PanelPortfolio.calculatePortfolio() HTML formatting with color indicators
      * Verifies: HTML output generation, profit/loss color coding, formatting consistency using ACTUAL method
      */
-    public static void TC_35_HTML_Portfolio_Display() {
+    @Test
+    @Order(9)
+    @DisplayName("TC-35: HTML Portfolio Display")
+    void testHtmlPortfolioDisplay() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -1233,7 +1238,10 @@ public class TestDriver_PanelPortfolio {
             });
             
             boolean htmlGenerationSuccessful = htmlGenerated[0] && htmlException[0] == null && actualHtmlContent[0] != null;
-            System.out.println("  HTML generation executed: " + (htmlGenerationSuccessful ? "  PASS" : "  FAIL"));
+            System.out.println("  HTML generation executed: " + htmlGenerationSuccessful);
+            
+            // JUnit Assertion for HTML generation
+            assertTrue(htmlGenerationSuccessful, "HTML generation should execute successfully");
             
             if (htmlGenerationSuccessful) {
                 String realHtmlContent = actualHtmlContent[0];
@@ -1248,10 +1256,14 @@ public class TestDriver_PanelPortfolio {
                 boolean hasFont = realHtmlContent.contains("<font");
                 boolean hasCenter = realHtmlContent.contains("<center") || realHtmlContent.contains("center");
                 
-                System.out.println("  HTML content exists: " + (hasHtmlStructure ? "  PASS" : "  FAIL"));
-                System.out.println("  HTML formatting tags: " + (hasFormatting ? "  PASS" : "  FAIL"));
-                System.out.println("  Font styling present: " + (hasFont ? "  PASS" : "  FAIL"));
-                System.out.println("  Layout formatting: " + (hasCenter ? "  PASS" : "  FAIL"));
+                System.out.println("  HTML content exists: " + hasHtmlStructure);
+                System.out.println("  HTML formatting tags: " + hasFormatting);
+                System.out.println("  Font styling present: " + hasFont);
+                System.out.println("  Layout formatting: " + hasCenter);
+                
+                // JUnit Assertions for HTML structure
+                assertTrue(hasHtmlStructure, "HTML content should have proper structure");
+                assertTrue(hasFormatting, "HTML should contain formatting tags");
                 
                 // TEST 3: Validate Actual Financial Data in HTML
                 System.out.println("\nTEST 3: ACTUAL FINANCIAL DATA VALIDATION");
@@ -1263,10 +1275,13 @@ public class TestDriver_PanelPortfolio {
                                     realHtmlContent.contains("£") || realHtmlContent.contains("¥");
                 boolean hasParentheses = realHtmlContent.contains("(") && realHtmlContent.contains(")");
                 
-                System.out.println("  Numerical data present: " + (hasNumericalData ? "  PASS" : "  FAIL"));
-                System.out.println("  Decimal formatting: " + (hasDecimalNumbers ? "  PASS" : "  FAIL"));
-                System.out.println("  Currency symbols: " + (hasCurrency ? "  PASS" : "  FAIL"));
-                System.out.println("  Percentage formatting: " + (hasParentheses ? "  PASS" : "  FAIL"));
+                System.out.println("  Numerical data present: " + hasNumericalData);
+                System.out.println("  Decimal formatting: " + hasDecimalNumbers);
+                System.out.println("  Currency symbols: " + hasCurrency);
+                System.out.println("  Percentage formatting: " + hasParentheses);
+                
+                // JUnit Assertions for numerical data
+                assertTrue(hasNumericalData, "HTML should contain numerical data");
                 
                 // TEST 4: Color Coding Validation (Theme-based)
                 System.out.println("\nTEST 4: ACTUAL COLOR CODING VALIDATION");
@@ -1277,9 +1292,12 @@ public class TestDriver_PanelPortfolio {
                 boolean hasMultipleColors = realHtmlContent.split("color").length > 2;
                 boolean hasThemeIntegration = realHtmlContent.contains("rgb(");
                 
-                System.out.println("  Color information present: " + (hasColorInfo ? "  PASS" : "  FAIL"));
-                System.out.println("  Multiple color usage: " + (hasMultipleColors ? "  PASS" : "  FAIL"));
-                System.out.println("  Theme integration (RGB): " + (hasThemeIntegration ? "  PASS" : "  FAIL"));
+                System.out.println("  Color information present: " + hasColorInfo);
+                System.out.println("  Multiple color usage: " + hasMultipleColors);
+                System.out.println("  Theme integration (RGB): " + hasThemeIntegration);
+                
+                // JUnit Assertions for color formatting
+                assertTrue(hasColorInfo, "HTML should contain color information for gains/losses");
                 
                 // TEST 5: Portfolio Data Integration
                 System.out.println("\nTEST 5: PORTFOLIO DATA INTEGRATION VALIDATION");
@@ -1294,8 +1312,12 @@ public class TestDriver_PanelPortfolio {
                     boolean htmlMatchesPortfolioSize = true; // Basic validation
                     
                     System.out.println("  Portfolio size: " + currentPortfolio.size());
-                    System.out.println("  HTML reflects portfolio data: " + (portfolioDataReflected ? "  PASS" : "  FAIL"));
-                    System.out.println("  Data consistency: " + (htmlMatchesPortfolioSize ? "  PASS" : "  FAIL"));
+                    System.out.println("  HTML reflects portfolio data: " + portfolioDataReflected);
+                    System.out.println("  Data consistency: " + htmlMatchesPortfolioSize);
+                    
+                    // JUnit Assertions for data reflection
+                    assertTrue(portfolioDataReflected, "HTML should reflect actual portfolio data");
+                    assertTrue(htmlMatchesPortfolioSize, "HTML data should be consistent with portfolio size");
                     
                     // Display a sample of the actual HTML for verification
                     System.out.println("\nSAMPLE HTML OUTPUT (first 200 chars):");
@@ -1314,7 +1336,10 @@ public class TestDriver_PanelPortfolio {
                 boolean overallPass = htmlGenerationSuccessful && hasHtmlStructure && hasFormatting && 
                                     hasNumericalData && hasColorInfo;
                 
-                System.out.println("\nTC-35 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
+                System.out.println("\nTC-35 RESULT: " + (overallPass ? "PASSED" : "FAILED"));
+                
+                // Final JUnit Assertion for TC-35
+                assertTrue(overallPass, "TC-35: HTML Portfolio Display should pass all validations");
                 
                 if (!overallPass) {
                     System.out.println("FAILURE DETAILS:");
@@ -1355,7 +1380,10 @@ public class TestDriver_PanelPortfolio {
      * Tests PanelPortfolio.refreshPortfolio() for currency conversion updates
      * Verifies: Base currency changes, portfolio recalculation, conversion accuracy using ACTUAL methods
      */
-    public static void TC_36_Currency_Conversion_Handling() {
+    @Test
+    @Order(10)
+    @DisplayName("TC-36: Currency Conversion Handling")
+    void testCurrencyConversionHandling() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -1410,7 +1438,10 @@ public class TestDriver_PanelPortfolio {
             });
             
             boolean originalRefreshSuccessful = originalRefreshExecuted[0] && originalRefreshException[0] == null;
-            System.out.println("  Original refresh executed: " + (originalRefreshSuccessful ? "  PASS" : "  FAIL"));
+            System.out.println("  Original refresh executed: " + originalRefreshSuccessful);
+            
+            // JUnit Assertion for original refresh
+            assertTrue(originalRefreshSuccessful, "Original currency refresh should execute successfully");
             System.out.println("  Original portfolio value: " + originalPortfolioValue[0]);
             
             if (originalRefreshSuccessful && testPanel[0] != null) {
@@ -1450,7 +1481,10 @@ public class TestDriver_PanelPortfolio {
                 });
                 
                 boolean eurRefreshSuccessful = eurRefreshExecuted[0] && eurRefreshException[0] == null;
-                System.out.println("  EUR refresh executed: " + (eurRefreshSuccessful ? "  PASS" : "  FAIL"));
+                System.out.println("  EUR refresh executed: " + eurRefreshSuccessful);
+                
+                // JUnit Assertion for EUR refresh
+                assertTrue(eurRefreshSuccessful, "EUR currency refresh should execute successfully");
                 System.out.println("  EUR portfolio value: " + eurPortfolioValue[0]);
                 
                 // TEST 3: Currency Change to GBP and Refresh
@@ -1488,7 +1522,10 @@ public class TestDriver_PanelPortfolio {
                 });
                 
                 boolean gbpRefreshSuccessful = gbpRefreshExecuted[0] && gbpRefreshException[0] == null;
-                System.out.println("  GBP refresh executed: " + (gbpRefreshSuccessful ? "  PASS" : "  FAIL"));
+                System.out.println("  GBP refresh executed: " + gbpRefreshSuccessful);
+                
+                // JUnit Assertion for GBP refresh
+                assertTrue(gbpRefreshSuccessful, "GBP currency refresh should execute successfully");
                 System.out.println("  GBP portfolio value: " + gbpPortfolioValue[0]);
                 
                 // TEST 4: Validate Currency State Transitions
@@ -1509,7 +1546,10 @@ public class TestDriver_PanelPortfolio {
                         (originalPortfolioValue[0] == 0 && eurPortfolioValue[0] == 0); // All zero is also valid
                         
                     System.out.println("  Portfolio has data: " + hasPortfolioData);
-                    System.out.println("  Currency changes affected values: " + (valuesChangedWithCurrency ? "  PASS" : "  FAIL"));
+                    System.out.println("  Currency changes affected values: " + valuesChangedWithCurrency);
+                    
+                    // JUnit Assertion for currency value changes
+                    assertTrue(valuesChangedWithCurrency, "Currency changes should affect portfolio values");
                     
                     if (!valuesChangedWithCurrency) {
                         currencyTransitionsWorked = false;
@@ -1540,7 +1580,10 @@ public class TestDriver_PanelPortfolio {
                 });
                 
                 boolean calculateWithCurrencySuccessful = calculateWithCurrencyExecuted[0] && calculateWithCurrencyException[0] == null;
-                System.out.println("  Calculate with currency executed: " + (calculateWithCurrencySuccessful ? "  PASS" : "  FAIL"));
+                System.out.println("  Calculate with currency executed: " + calculateWithCurrencySuccessful);
+                
+                // JUnit Assertion for calculate with currency
+                assertTrue(calculateWithCurrencySuccessful, "Calculate with currency should execute successfully");
                 
                 // FINAL VALIDATION
                 System.out.println("\nFINAL STATE:");
@@ -1553,7 +1596,10 @@ public class TestDriver_PanelPortfolio {
                                     gbpRefreshSuccessful && currencyTransitionsWorked && 
                                     calculateWithCurrencySuccessful;
                 
-                System.out.println("\nTC-36 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
+                System.out.println("\nTC-36 RESULT: " + (overallPass ? "PASSED" : "FAILED"));
+                
+                // Final JUnit Assertion for TC-36
+                assertTrue(overallPass, "TC-36: Currency Conversion Handling should pass all validations");
                 
                 if (!overallPass) {
                     System.out.println("FAILURE DETAILS:");
@@ -1592,7 +1638,10 @@ public class TestDriver_PanelPortfolio {
      * Tests input validation patterns that mirror PanelPortfolio.bAddCoinListener validation logic
      * Verifies: Error message patterns, input range validation, format checking using actual validation approach
      */
-    public static void TC_37_Input_Validation() {
+    @Test
+    @Order(11)
+    @DisplayName("TC-37: Input Validation")
+    void testInputValidation() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -1634,21 +1683,18 @@ public class TestDriver_PanelPortfolio {
                 
                 // Use ACTUAL validation logic from bAddCoinListener (line 458-470)
                 boolean isValid = false;
-                String errorMessage = "";
-                double validAmount = 0.0;
                 
                 try {
                     if (input == null) { // pressed "cancel button"
-                        errorMessage = "Input cancelled";
+                        // Input cancelled
                     } else {
                         double amount = Double.parseDouble(input);
-                        validAmount = amount;
                         isValid = true; // bAddCoinListener accepts any parseable double
                         System.out.println("  Input: '" + input + "' → VALID (amount: " + amount + ")");
                     }
                 } catch (Exception ex) {
-                    errorMessage = "Incorrect format! You can only write a number with or without decimal (example: 51.2)";
-                    System.out.println("  Input: '" + input + "' → INVALID (" + errorMessage + ")");
+                    String error = "Incorrect format! You can only write a number with or without decimal (example: 51.2)";
+                    System.out.println("  Input: '" + input + "' → INVALID (" + error + ")");
                 }
                 
                 // Validate against actual bAddCoinListener behavior
@@ -1656,10 +1702,13 @@ public class TestDriver_PanelPortfolio {
                 boolean testPassed = (isValid == expectedValid) || (input == null && !isValid);
                 
                 if (!testPassed) amountValidationCorrect = false;
-                System.out.println("    Validation result: " + (testPassed ? "  PASS" : "  FAIL"));
+                System.out.println("    Validation result: " + testPassed);
             }
             
-            System.out.println("  Amount validation (actual pattern): " + (amountValidationCorrect ? "  PASS" : "  FAIL"));
+            System.out.println("  Amount validation (actual pattern): " + amountValidationCorrect);
+            
+            // JUnit Assertion for amount validation
+            assertTrue(amountValidationCorrect, "Amount validation should follow actual bAddCoinListener pattern");
             
             // TEST 2: Price Validation (Actual bAddCoinListener Logic Pattern)
             System.out.println("\nTEST 2: PRICE VALIDATION (Actual Pattern from bAddCoinListener)");
@@ -1672,18 +1721,16 @@ public class TestDriver_PanelPortfolio {
                 
                 // Use ACTUAL validation logic from bAddCoinListener (line 475-490)
                 boolean isValid = false;
-                String errorMessage = "";
                 
                 try {
                     if (input == null) { // pressed "cancel button"
-                        errorMessage = "Input cancelled";
+                        // Input cancelled
                     } else {
                         double price = Double.parseDouble(input);
                         isValid = true; // bAddCoinListener accepts any parseable double (even negative!)
                         System.out.println("  Input: '" + input + "' → VALID (price: " + price + ")");
                     }
                 } catch (Exception ex) {
-                    errorMessage = "Incorrect format, getting current price";
                     System.out.println("  Input: '" + input + "' → INVALID (fallback to current price)");
                 }
                 
@@ -1693,10 +1740,13 @@ public class TestDriver_PanelPortfolio {
                 boolean testPassed = (isValid == expectedValid) || (input == null && !isValid);
                 
                 if (!testPassed) priceValidationCorrect = false;
-                System.out.println("    Validation result: " + (testPassed ? "  PASS" : "  FAIL"));
+                System.out.println("    Validation result: " + testPassed);
             }
             
-            System.out.println("  Price validation (actual pattern): " + (priceValidationCorrect ? "  PASS" : "  FAIL"));
+            System.out.println("  Price validation (actual pattern): " + priceValidationCorrect);
+            
+            // JUnit Assertion for price validation
+            assertTrue(priceValidationCorrect, "Price validation should follow actual bAddCoinListener pattern");
             
             // TEST 3: Actual Exception Handling Pattern
             System.out.println("\nTEST 3: ACTUAL EXCEPTION HANDLING VALIDATION");
@@ -1707,7 +1757,7 @@ public class TestDriver_PanelPortfolio {
             for (String input : invalidInputs) {
                 boolean caughtException = false;
                 try {
-                    double value = Double.parseDouble(input);
+                    Double.parseDouble(input); // Parse but don't assign - we expect exception
                 } catch (NumberFormatException ex) {
                     caughtException = true;
                     System.out.println("  Input: '" + input + "' → NumberFormatException caught  ");
@@ -1719,7 +1769,10 @@ public class TestDriver_PanelPortfolio {
                 }
             }
             
-            System.out.println("  Exception handling (actual behavior): " + (exceptionHandlingCorrect ? "  PASS" : "  FAIL"));
+            System.out.println("  Exception handling (actual behavior): " + exceptionHandlingCorrect);
+            
+            // JUnit Assertion for exception handling
+            assertTrue(exceptionHandlingCorrect, "Exception handling should match actual NumberFormatException behavior");
             
             // TEST 4: Validate Portfolio Integration Context
             System.out.println("\nTEST 4: PORTFOLIO INTEGRATION CONTEXT VALIDATION");
@@ -1741,7 +1794,10 @@ public class TestDriver_PanelPortfolio {
                 portfolioContextValid = webDataAccessible && portfolioDataAccessible;
             }
             
-            System.out.println("  Portfolio integration context: " + (portfolioContextValid ? "  PASS" : "  FAIL"));
+            System.out.println("  Portfolio integration context: " + portfolioContextValid);
+            
+            // JUnit Assertion for portfolio context
+            assertTrue(portfolioContextValid, "Portfolio integration context should be valid for input validation");
             
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
@@ -1753,7 +1809,10 @@ public class TestDriver_PanelPortfolio {
             boolean overallPass = amountValidationCorrect && priceValidationCorrect && 
                                 exceptionHandlingCorrect && portfolioContextValid;
             
-            System.out.println("\nTC-37 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
+            System.out.println("\nTC-37 RESULT: " + (overallPass ? "PASSED" : "FAILED"));
+            
+            // Final JUnit Assertion for TC-37
+            assertTrue(overallPass, "TC-37: Input Validation should pass all validations");
             
             if (!overallPass) {
                 System.out.println("FAILURE DETAILS:");
@@ -1781,7 +1840,10 @@ public class TestDriver_PanelPortfolio {
      * Tests PanelPortfolio.testFindPortfolioName() duplicate cryptocurrency prevention
      * Verifies: Duplicate detection, case sensitivity, name matching accuracy using ACTUAL method
      */
-    public static void TC_38_Duplicate_Entry_Prevention() {
+    @Test
+    @Order(12)
+    @DisplayName("TC-38: Duplicate Entry Prevention")
+    void testDuplicateEntryPrevention() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -1863,7 +1925,10 @@ public class TestDriver_PanelPortfolio {
                 }
             }
             
-            System.out.println("  Actual duplicate detection: " + (duplicateDetectionCorrect ? "  PASS" : "  FAIL"));
+            System.out.println("  Actual duplicate detection: " + duplicateDetectionCorrect);
+            
+            // JUnit Assertion for duplicate detection
+            assertTrue(duplicateDetectionCorrect, "Duplicate detection should work correctly with testFindPortfolioName");
             
             // TEST 2: Actual Non-Duplicate Detection
             System.out.println("\nTEST 2: ACTUAL NON-DUPLICATE DETECTION");
@@ -1886,7 +1951,10 @@ public class TestDriver_PanelPortfolio {
                 }
             }
             
-            System.out.println("  Actual non-duplicate detection: " + (nonDuplicateDetectionCorrect ? "  PASS" : "  FAIL"));
+            System.out.println("  Actual non-duplicate detection: " + nonDuplicateDetectionCorrect);
+            
+            // JUnit Assertion for non-duplicate detection
+            assertTrue(nonDuplicateDetectionCorrect, "Non-duplicate detection should work correctly");
             
             // TEST 3: Case Sensitivity Testing with Actual Method
             System.out.println("\nTEST 3: ACTUAL CASE SENSITIVITY TESTING");
@@ -1939,7 +2007,10 @@ public class TestDriver_PanelPortfolio {
                 }
             }
             
-            System.out.println("  Edge case handling: " + (edgeCaseHandlingCorrect ? "  PASS" : "  FAIL"));
+            System.out.println("  Edge case handling: " + edgeCaseHandlingCorrect);
+            
+            // JUnit Assertion for edge case handling
+            assertTrue(edgeCaseHandlingCorrect, "Edge case handling should be robust");
             
             // TEST 5: Integration with Actual Portfolio Data
             System.out.println("\nTEST 5: INTEGRATION WITH ACTUAL PORTFOLIO DATA");
@@ -1949,7 +2020,10 @@ public class TestDriver_PanelPortfolio {
             boolean integrationCorrect = actualPortfolioSize >= 0; // Basic sanity check
             
             System.out.println("  Actual portfolio size: " + actualPortfolioSize);
-            System.out.println("  Method integration: " + (integrationCorrect ? "  PASS" : "  FAIL"));
+            System.out.println("  Method integration: " + integrationCorrect);
+            
+            // JUnit Assertion for method integration
+            assertTrue(integrationCorrect, "Method should integrate properly with actual portfolio data");
             
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
@@ -1961,7 +2035,10 @@ public class TestDriver_PanelPortfolio {
             boolean overallPass = duplicateDetectionCorrect && nonDuplicateDetectionCorrect && 
                                 caseSensitivityCorrect && edgeCaseHandlingCorrect && integrationCorrect;
             
-            System.out.println("\nTC-38 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
+            System.out.println("\nTC-38 RESULT: " + (overallPass ? "PASSED" : "FAILED"));
+            
+            // Final JUnit Assertion for TC-38
+            assertTrue(overallPass, "TC-38: Duplicate Entry Prevention should pass all validations");
             
             if (!overallPass) {
                 System.out.println("FAILURE DETAILS:");
@@ -1996,7 +2073,10 @@ public class TestDriver_PanelPortfolio {
      * Tests PanelPortfolio.serializePortfolio() complete data persistence
      * Verifies: Data serialization, session persistence, data integrity using ACTUAL method calls
      */
-    public static void TC_39_Portfolio_Data_Serialization() {
+    @Test
+    @Order(13)
+    @DisplayName("TC-39: Portfolio Data Serialization")
+    void testPortfolioDataSerialization() {
         String border = "";
         for (int i = 0; i < 80; i++) border += "=";
         System.out.println("\n" + border);
@@ -2085,7 +2165,10 @@ public class TestDriver_PanelPortfolio {
             });
             
             boolean serializeSuccessful = serializeExecuted[0] && serializeException[0] == null;
-            System.out.println("  Serialize method executed: " + (serializeSuccessful ? "  PASS" : "  FAIL"));
+            System.out.println("  Serialize method executed: " + serializeSuccessful);
+            
+            // JUnit Assertion for serialization
+            assertTrue(serializeSuccessful, "Serialize method should execute successfully");
             
             // TEST 2: Actual File I/O Validation
             System.out.println("\nTEST 2: ACTUAL FILE I/O VALIDATION");
