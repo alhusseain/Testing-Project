@@ -1,6 +1,9 @@
-package com.cryptochecker;
+package com.cryptochecker.userinterface;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import com.cryptochecker.Main;
+import com.cryptochecker.PanelCoin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
