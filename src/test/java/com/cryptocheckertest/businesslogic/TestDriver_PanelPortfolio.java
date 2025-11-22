@@ -199,10 +199,10 @@ public class TestDriver_PanelPortfolio {
             assertTrue(actualFinalName.startsWith("Portfolio "), "Portfolio name should follow 'Portfolio X' format");
             assertTrue(!duplicateFound || actualFinalName.endsWith(" "), "Duplicate names should be resolved properly");
             
-            System.out.println("\n✅ TC-27: New Portfolio Creation - PASSED");
+            System.out.println("\n   TC-27: New Portfolio Creation - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\n❌ TC-27: New Portfolio Creation - FAILED");
+            System.out.println("\n   TC-27: New Portfolio Creation - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-27 failed due to exception: " + e.getMessage());
         }
@@ -319,10 +319,10 @@ public class TestDriver_PanelPortfolio {
             // CLEANUP
             Main.gui.webData.portfolio_names.set(targetIndex, originalName);
             System.out.println("Cleanup: Reset to original name '" + originalName + "'");
-            System.out.println("\n✅ TC-28: Portfolio Renaming Validation - PASSED");
+            System.out.println("\n   TC-28: Portfolio Renaming Validation - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\n❌ TC-28: Portfolio Renaming Validation - FAILED");
+            System.out.println("\n   TC-28: Portfolio Renaming Validation - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-28 failed due to exception: " + e.getMessage());
         }
@@ -433,10 +433,10 @@ public class TestDriver_PanelPortfolio {
             assertFalse(canDeleteWhenOne, "Deletion should be prevented at minimum boundary");
             assertEquals(1, Main.gui.webData.portfolio.size(), "Portfolio data should remain intact");
             
-            System.out.println("\n✅ TC-29: Portfolio Deletion Enforcement - PASSED");
+            System.out.println("\n   TC-29: Portfolio Deletion Enforcement - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\n❌ TC-29: Portfolio Deletion Enforcement - FAILED");
+            System.out.println("\n   TC-29: Portfolio Deletion Enforcement - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-29 failed due to exception: " + e.getMessage());
         }
@@ -553,10 +553,10 @@ public class TestDriver_PanelPortfolio {
                 Main.gui.webData.portfolio_names.remove(Main.gui.webData.portfolio_names.size() - 1);
             }
             System.out.println("Cleanup: Removed test portfolios, back to " + Main.gui.webData.portfolio_names.size() + " portfolios");
-            System.out.println("\n✅ TC-30: Duplicate Name Handling - PASSED");
+            System.out.println("\n   TC-30: Duplicate Name Handling - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\n❌ TC-30: Duplicate Name Handling - FAILED");
+            System.out.println("\n   TC-30: Duplicate Name Handling - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-30 failed due to exception: " + e.getMessage());
         }
@@ -648,10 +648,10 @@ public class TestDriver_PanelPortfolio {
             assertEquals(1, Main.gui.webData.portfolio_names.size(), "Portfolio names should still exist");
             assertEquals(Main.gui.webData.portfolio.size(), Main.gui.webData.portfolio_names.size(), "Data should be consistent between portfolio lists");
             
-            System.out.println("\n✅ TC-31: Minimum Portfolio Requirement - PASSED");
+            System.out.println("\n   TC-31: Minimum Portfolio Requirement - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\n❌ TC-31: Minimum Portfolio Requirement - FAILED");
+            System.out.println("\n   TC-31: Minimum Portfolio Requirement - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-31 failed due to exception: " + e.getMessage());
         }
@@ -809,10 +809,10 @@ public class TestDriver_PanelPortfolio {
                 Main.gui.webData.portfolio_names.set(0, originalName);
                 System.out.println("Cleanup: Restored original name '" + originalName + "'");
             }
-            System.out.println("\n✅ TC-32: Portfolio Data Integrity - PASSED");
+            System.out.println("\n   TC-32: Portfolio Data Integrity - PASSED");
             
         } catch (Exception e) {
-            System.out.println("\n❌ TC-32: Portfolio Data Integrity - FAILED");
+            System.out.println("\n   TC-32: Portfolio Data Integrity - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-32 failed due to exception: " + e.getMessage());
         }
@@ -1156,7 +1156,7 @@ public class TestDriver_PanelPortfolio {
                 assertTrue(calculateSuccessful, "calculatePortfolio() method should execute successfully");
                 assertTrue(portfolioDataConsistent, "Portfolio data should be consistent after calculations");
                 
-                System.out.println("\n✅ TC-34: Portfolio Gains/Losses Calculation - PASSED");
+                System.out.println("\n   TC-34: Portfolio Gains/Losses Calculation - PASSED");
                 
             } else {
                 fail("Could not proceed - panel creation or refresh failed");
@@ -1167,7 +1167,7 @@ public class TestDriver_PanelPortfolio {
             System.out.println("Cleanup: Restored original portfolio index");
             
         } catch (Exception e) {
-            System.out.println("\n❌ TC-34: Portfolio Gains/Losses Calculation - FAILED");
+            System.out.println("\n   TC-34: Portfolio Gains/Losses Calculation - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-34 failed due to exception: " + e.getMessage());
         }
