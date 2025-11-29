@@ -34,6 +34,9 @@ public class PanelCoin {
     public JTextField getHeaderSearchField() {
         return headerSearchField;
     }
+    public TableModel getModel() {
+        return model;
+    }
 
     public PanelCoin() {
         panel = new JPanel();
@@ -138,6 +141,8 @@ public class PanelCoin {
         Main.frame.getContentPane().revalidate();
         Main.frame.getContentPane().repaint();
     }
+
+
 
     private class SearchDocumentListener implements DocumentListener {
         public void insertUpdate(DocumentEvent e) {
