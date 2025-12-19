@@ -47,7 +47,18 @@ public class PanelConverter {
     private DecimalFormat df5 = new DecimalFormat("#.######");
     private DecimalFormat df6 = new DecimalFormat("#.############");
 
+    private DialogService dialogService;
+
     public PanelConverter() {
+        this(null);
+    }
+
+    public PanelConverter(DialogService dialogService) {
+        if (dialogService == null) {
+            this.dialogService = new SwingDialogService();
+        } else {
+            this.dialogService = dialogService;
+        }
         panel = new JPanel();
         panel.setVisible(false);
         panel.setBackground(Color.WHITE);
@@ -398,7 +409,7 @@ public class PanelConverter {
     private class bGlobalListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             Debug.log("Button Global Clicked");
-            JOptionPane.showMessageDialog(Main.frame, Main.gui.webData.global_data.toString(), "Global", JOptionPane.PLAIN_MESSAGE);
+            dialogService.showMessageDialog(Main.frame, Main.gui.webData.global_data.toString(), "Global", JOptionPane.PLAIN_MESSAGE);
         }
     }
     
@@ -415,7 +426,7 @@ public class PanelConverter {
 
             if (nr == 2) {
                 Object[] convertSelectionOptions = { "Cryptocurrency", "Current currency ("+Main.currency+")"};
-                convertSelection = JOptionPane.showOptionDialog(Main.frame, "Select one of the options", "Selection", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, convertSelectionOptions, convertSelectionOptions[1]);
+                convertSelection = dialogService.showOptionDialog(Main.frame, "Select one of the options", "Selection", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, convertSelectionOptions, convertSelectionOptions[1]);
                 Debug.log("-- menu selection " +convertSelection);
             } else {
                 convertSelection = 0;
@@ -425,7 +436,7 @@ public class PanelConverter {
                 case 0:
                     Object[] options = Main.gui.webData.coin.toArray();
 
-                    Object selectedValue = JOptionPane.showInputDialog(Main.frame, "Select cryptocurrency to add", "Add To Portfolio", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+                    Object selectedValue = dialogService.showInputDialog(Main.frame, "Select cryptocurrency to add", "Add To Portfolio", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
                     if (selectedValue == null) {
                         Debug.log("-- cancel");
                         return;
@@ -477,7 +488,7 @@ public class PanelConverter {
             Debug.log("Button Switch Clicked");
 
             if (priceCurrency2 == 0 || priceCurrency1 == 0) {
-                JOptionPane.showMessageDialog(Main.frame, "You must select a cryptocurrency for both fields", "Select Cryptocurrencies", JOptionPane.PLAIN_MESSAGE);
+                dialogService.showMessageDialog(Main.frame, "You must select a cryptocurrency for both fields", "Select Cryptocurrencies", JOptionPane.PLAIN_MESSAGE);
                 return;
             }
 
@@ -641,5 +652,44 @@ public class PanelConverter {
         priceCurrency2 = price1;
         retrieveText(1, info2);
         retrieveText(2, info1);
+    }
+
+    // HELPERS
+    public interface DialogService {
+        Object showInputDialog(Component parentComponent, Object message, String title, int messageType, Icon icon,
+                Object[] selectionValues, Object initialSelectionValue);
+
+        void showMessageDialog(Component parentComponent, Object message);
+
+        void showMessageDialog(Component parentComponent, Object message, String title, int messageType);
+
+        int showOptionDialog(Component parentComponent, Object message, String title, int optionType, int messageType,
+                Icon icon, Object[] options, Object initialValue);
+    }
+
+    protected class SwingDialogService implements DialogService {
+        @Override
+        public Object showInputDialog(Component parentComponent, Object message, String title, int messageType,
+                Icon icon, Object[] selectionValues, Object initialSelectionValue) {
+            return JOptionPane.showInputDialog(parentComponent, message, title, messageType, icon, selectionValues,
+                    initialSelectionValue);
+        }
+
+        @Override
+        public void showMessageDialog(Component parentComponent, Object message) {
+            JOptionPane.showMessageDialog(parentComponent, message);
+        }
+
+        @Override
+        public void showMessageDialog(Component parentComponent, Object message, String title, int messageType) {
+            JOptionPane.showMessageDialog(parentComponent, message, title, messageType);
+        }
+
+        @Override
+        public int showOptionDialog(Component parentComponent, Object message, String title, int optionType,
+                int messageType, Icon icon, Object[] options, Object initialValue) {
+            return JOptionPane.showOptionDialog(parentComponent, message, title, optionType, messageType, icon, options,
+                    initialValue);
+        }
     }
 }
