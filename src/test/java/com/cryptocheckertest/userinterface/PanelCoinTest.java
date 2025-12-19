@@ -48,7 +48,7 @@ public class PanelCoinTest {
         }
     }
 
-
+// BLACK BOX
     @ParameterizedTest
     @CsvSource({
             ",100", "tether,2", "sajfkdjk,0", "xrp,1"
@@ -125,4 +125,7 @@ public class PanelCoinTest {
 
     }
 }
+
+// WHITE BOX
+
 

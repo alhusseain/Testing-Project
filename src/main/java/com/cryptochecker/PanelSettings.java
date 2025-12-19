@@ -11,7 +11,8 @@ public class PanelSettings {
     public JPanel panel;
 
     private JButton bTheme;
-    private JButton bCurrency;
+    public JButton bCurrency;
+    public String selectedValue;
     private JButton bDebug;
 
     private JFrame colorFrame;
@@ -45,6 +46,13 @@ public class PanelSettings {
     private JTextField content7field;
     private JTextField content8field;
     private JTextField content9field;
+
+    public ActionListener getbThemeListener() {
+        return new bThemeListener();
+    }
+    public ActionListener getbCurrencyListener() {
+        return new bCurrencyListener();
+    }
 
     public PanelSettings() {
         panel = new JPanel();
@@ -451,7 +459,7 @@ public class PanelSettings {
             Debug.log("-- Changing currency");
 
             String options[] = { "USD", "EUR", "GBP", "SEK", "AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK", "DKK", "HKD", "HUF", "IDR", "ILS", "INR", "KRW", "JPY", "MXN", "MYR", "NOK", "NZD", "PHP", "PKR", "PLN", "RUB", "SGD", "THB", "TRY", "TWD", "ZAR" };
-            String selectedValue = (String) JOptionPane.showInputDialog(Main.frame, "Select currency to use", "Currency", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+            selectedValue = (String) JOptionPane.showInputDialog(Main.frame, "Select currency to use", "Currency", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
 
             if (selectedValue == null) {
                 Debug.log("-- cancel");
