@@ -110,8 +110,8 @@ public class PanelConverter {
 
         fieldCurrency1 = new JTextField("");
         fieldCurrency1.setHorizontalAlignment(JTextField.CENTER);
-        fieldCurrency1.setMinimumSize(new Dimension(contentWidth, contentHeight/2));
-        fieldCurrency1.setMaximumSize(new Dimension(contentWidth, contentHeight/2));
+        fieldCurrency1.setMinimumSize(new Dimension(contentWidth, contentHeight / 2));
+        fieldCurrency1.setMaximumSize(new Dimension(contentWidth, contentHeight / 2));
         fieldCurrency1.setBorder(BorderFactory.createEmptyBorder());
 
         topLeft2.add(fieldCurrency1);
@@ -123,7 +123,7 @@ public class PanelConverter {
         JButton bSwitch = Main.gui.getButtonTemplate("Switch");
         bSwitch.addActionListener(new bSwitchListener());
         bSwitch.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.LIGHT_GRAY));
-        bSwitch.setPreferredSize(new Dimension(contentWidth/2,contentHeight));
+        bSwitch.setPreferredSize(new Dimension(contentWidth / 2, contentHeight));
 
         // CONTENT TOP - RIGHT
         JPanel topRight = new JPanel();
@@ -145,8 +145,8 @@ public class PanelConverter {
 
         fieldCurrency2 = new JTextField("");
         fieldCurrency2.setHorizontalAlignment(JTextField.CENTER);
-        fieldCurrency2.setMinimumSize(new Dimension(contentWidth, contentHeight/2));
-        fieldCurrency2.setMaximumSize(new Dimension(contentWidth, contentHeight/2));
+        fieldCurrency2.setMinimumSize(new Dimension(contentWidth, contentHeight / 2));
+        fieldCurrency2.setMaximumSize(new Dimension(contentWidth, contentHeight / 2));
         fieldCurrency2.setBorder(BorderFactory.createEmptyBorder());
         fieldCurrency2.setBackground(Color.WHITE);
         fieldCurrency2.setEditable(false);
@@ -163,13 +163,13 @@ public class PanelConverter {
         // CONTENT BOTTOM - LEFT
         JPanel leftBottom = new JPanel();
         leftBottom.setLayout(new BoxLayout(leftBottom, BoxLayout.Y_AXIS));
-        leftBottom.setPreferredSize(new Dimension(contentWidth, contentHeight*6));
+        leftBottom.setPreferredSize(new Dimension(contentWidth, contentHeight * 6));
         leftBottom.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.LIGHT_GRAY));
 
         textBox1 = new JEditorPane();
         textBox1.setFont(textBoxFont);
         textBox1.setEditable(false);
-        
+
         leftBottom.add(textBox1);
 
         // CONTENT BOTTOM - MIDDLE
@@ -180,7 +180,7 @@ public class PanelConverter {
         // CONTENT BOTTOM - RIGHT
         JPanel rightBottom = new JPanel();
         rightBottom.setLayout(new BoxLayout(rightBottom, BoxLayout.Y_AXIS));
-        rightBottom.setPreferredSize(new Dimension(contentWidth, contentHeight*6));
+        rightBottom.setPreferredSize(new Dimension(contentWidth, contentHeight * 6));
         rightBottom.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, Color.LIGHT_GRAY));
 
         textBox2 = new JEditorPane();
@@ -197,9 +197,9 @@ public class PanelConverter {
         fieldCurrency1.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) {
                 Double docText;
-                try { 
+                try {
                     docText = Double.parseDouble(fieldCurrency1.getText());
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     docText = null;
                 }
 
@@ -214,9 +214,9 @@ public class PanelConverter {
 
             public void removeUpdate(DocumentEvent e) {
                 Double docText;
-                try { 
+                try {
                     docText = Double.parseDouble(fieldCurrency1.getText());
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     docText = null;
                 }
 
@@ -230,7 +230,8 @@ public class PanelConverter {
             }
 
             public void changedUpdate(DocumentEvent e) {
-                throw new UnsupportedOperationException("Not supported yet."); // to change body of generated methods, choose Tools | Templates.
+                throw new UnsupportedOperationException("Not supported yet."); // to change body of generated methods,
+                                                                               // choose Tools | Templates.
             }
         });
 
@@ -242,17 +243,17 @@ public class PanelConverter {
         // BUTTONS HEADER
         JPanel headerButtons = new JPanel();
         headerButtons.setLayout(new BoxLayout(headerButtons, BoxLayout.X_AXIS));
-        headerButtons.setPreferredSize(new Dimension(Main.panelWidth*amountHeaderButtons, Main.panelHeight-1));
+        headerButtons.setPreferredSize(new Dimension(Main.panelWidth * amountHeaderButtons, Main.panelHeight - 1));
 
         JButton bRefresh = Main.gui.getButtonTemplate("Refresh");
         bRefresh.addActionListener(new bRefreshListener());
         bRefresh.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 1, Color.LIGHT_GRAY));
-        bRefresh.setMaximumSize(new Dimension(Main.panelWidth, Main.panelHeight+1));
+        bRefresh.setMaximumSize(new Dimension(Main.panelWidth, Main.panelHeight + 1));
 
         JButton bGlobal = Main.gui.getButtonTemplate("Global Data");
         bGlobal.addActionListener(new bGlobalListener());
         bGlobal.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, Color.LIGHT_GRAY));
-        bGlobal.setMaximumSize(new Dimension(Main.panelWidth, Main.panelHeight+1));
+        bGlobal.setMaximumSize(new Dimension(Main.panelWidth, Main.panelHeight + 1));
 
         headerButtons.add(bRefresh);
         headerButtons.add(bGlobal);
@@ -260,7 +261,7 @@ public class PanelConverter {
         // HEADER FILLING
         JPanel headerFilling = new JPanel();
         headerFilling.setLayout(new BorderLayout());
-        headerFilling.setMaximumSize(new Dimension((int) Main.screenResolution.getWidth(), Main.panelHeight-1));
+        headerFilling.setMaximumSize(new Dimension((int) Main.screenResolution.getWidth(), Main.panelHeight - 1));
         headerFilling.setBackground(Color.GRAY);
 
         themeSwitch(); // select theme color
@@ -279,7 +280,7 @@ public class PanelConverter {
         retrieveText(1, infoCurrency1);
         retrieveText(2, infoCurrency2);
     }
-    
+
     public void reCreate() {
         calculateGlobal();
 
@@ -290,13 +291,14 @@ public class PanelConverter {
                 break;
             }
         }
-        if (priceCurrency2 != 0) for (int i = 0; i < Main.gui.webData.coin.size(); ++i) {
-            if (Main.gui.webData.coin.get(i).name.equals(buttonCurrency2.getText())) {
-                priceCurrency2 = Main.gui.webData.coin.get(i).price;
-                retrieveText(2, Main.gui.webData.coin.get(i).getInfo());
-                break;
+        if (priceCurrency2 != 0)
+            for (int i = 0; i < Main.gui.webData.coin.size(); ++i) {
+                if (Main.gui.webData.coin.get(i).name.equals(buttonCurrency2.getText())) {
+                    priceCurrency2 = Main.gui.webData.coin.get(i).price;
+                    retrieveText(2, Main.gui.webData.coin.get(i).getInfo());
+                    break;
+                }
             }
-        }
         else { // priceCurrency2 is 0, it's value is Main.currency
             buttonCurrency2.setText(Main.currency);
             fieldCurrency1.setText(fieldCurrency1.getText()); // invoke documentlistener on currency change
@@ -309,7 +311,7 @@ public class PanelConverter {
     }
 
     private void retrieveText(int box, String info) {
-        //Debug.log("Retrieving Box "+box);
+        // Debug.log("Retrieving Box "+box);
 
         switch (box) {
             case 1:
@@ -331,22 +333,35 @@ public class PanelConverter {
         Double returnValue = 0.0;
         String returnString = "";
 
-        if (priceCurrency2 == 0.0 && buttonCurrency2.getText().equals(Main.currency)) {
-            returnValue = priceCurrency1*x;
-        }
-        else if (priceCurrency1 == 0 || priceCurrency2 == 0) {
+        // =========================================================================
+        // FIX -- Reject negative prices (invalid data)
+        // Negative prices can occur from API errors or data corruption.
+        // Conversion with negative prices produces nonsensical negative results.
+        // =========================================================================
+        if (priceCurrency1 < 0 || priceCurrency2 < 0) {
             return String.valueOf(0);
         }
-        else {
-            returnValue = (priceCurrency1/priceCurrency2)*x;
+
+        if (priceCurrency2 == 0.0 && buttonCurrency2.getText().equals(Main.currency)) {
+            returnValue = priceCurrency1 * x;
+        } else if (priceCurrency1 == 0 || priceCurrency2 == 0) {
+            return String.valueOf(0);
+        } else {
+            returnValue = (priceCurrency1 / priceCurrency2) * x;
         }
 
-        if (returnValue > 1) returnString = String.valueOf(df1.format(returnValue));
-        else if (returnValue > 0.1) returnString = String.valueOf(df2.format(returnValue));
-        else if (returnValue > 0.01) returnString = String.valueOf(df3.format(returnValue));
-        else if (returnValue > 0.001) returnString = String.valueOf(df4.format(returnValue));
-        else if (returnValue > 0.0001) returnString = String.valueOf(df5.format(returnValue));
-        else returnString = String.valueOf(df6.format(returnValue));
+        if (returnValue > 1)
+            returnString = String.valueOf(df1.format(returnValue));
+        else if (returnValue > 0.1)
+            returnString = String.valueOf(df2.format(returnValue));
+        else if (returnValue > 0.01)
+            returnString = String.valueOf(df3.format(returnValue));
+        else if (returnValue > 0.001)
+            returnString = String.valueOf(df4.format(returnValue));
+        else if (returnValue > 0.0001)
+            returnString = String.valueOf(df5.format(returnValue));
+        else
+            returnString = String.valueOf(df6.format(returnValue));
 
         return returnString;
     }
@@ -355,16 +370,19 @@ public class PanelConverter {
         double total_market_cap = Main.gui.webData.global_data.total_market_cap;
         double total_24h_volume = Main.gui.webData.global_data.total_24h_volume;
         double bitcoin_percentage = Main.gui.webData.global_data.bitcoin_percentage_of_market_cap;
-        
+
         DecimalFormat htmlFormat = new DecimalFormat("#,###.##");
 
-        String htmlFont = "<font color=\"rgb("+Main.theme.foreground.getRed()+", "+Main.theme.foreground.getGreen()+", "+Main.theme.foreground.getBlue()+")\">";
-        String htmlGreen = "<font color=\"rgb("+Main.theme.green.getRed()+", "+Main.theme.green.getGreen()+", "+Main.theme.green.getBlue()+")\">";
+        String htmlFont = "<font color=\"rgb(" + Main.theme.foreground.getRed() + ", "
+                + Main.theme.foreground.getGreen() + ", " + Main.theme.foreground.getBlue() + ")\">";
+        String htmlGreen = "<font color=\"rgb(" + Main.theme.green.getRed() + ", " + Main.theme.green.getGreen() + ", "
+                + Main.theme.green.getBlue() + ")\">";
 
-        String htmlOverview = htmlFont+"<font size=\"6\"><font face=\"helvetica\">"+"<center>"
-        +"{ "+htmlFormat.format(total_market_cap)+" }<br>"
-        +"<font size=\"4\"><b>24 Hour Volume: "+htmlGreen+htmlFormat.format(total_24h_volume)+htmlFont+"<br>"
-        +"Bitcoin Dominance: "+htmlGreen+bitcoin_percentage+"%"+htmlFont+"</b></center>";
+        String htmlOverview = htmlFont + "<font size=\"6\"><font face=\"helvetica\">" + "<center>"
+                + "{ " + htmlFormat.format(total_market_cap) + " }<br>"
+                + "<font size=\"4\"><b>24 Hour Volume: " + htmlGreen + htmlFormat.format(total_24h_volume) + htmlFont
+                + "<br>"
+                + "Bitcoin Dominance: " + htmlGreen + bitcoin_percentage + "%" + htmlFont + "</b></center>";
 
         // set text
         if (overviewText != null) {
@@ -409,10 +427,11 @@ public class PanelConverter {
     private class bGlobalListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             Debug.log("Button Global Clicked");
-            dialogService.showMessageDialog(Main.frame, Main.gui.webData.global_data.toString(), "Global", JOptionPane.PLAIN_MESSAGE);
+            dialogService.showMessageDialog(Main.frame, Main.gui.webData.global_data.toString(), "Global",
+                    JOptionPane.PLAIN_MESSAGE);
         }
     }
-    
+
     private class buttonCurrencyListener implements ActionListener {
         private int nr;
 
@@ -421,13 +440,15 @@ public class PanelConverter {
         }
 
         public void actionPerformed(ActionEvent e) {
-            Debug.log("Button Convert Currency "+nr+" Clicked");
+            Debug.log("Button Convert Currency " + nr + " Clicked");
             int convertSelection;
 
             if (nr == 2) {
-                Object[] convertSelectionOptions = { "Cryptocurrency", "Current currency ("+Main.currency+")"};
-                convertSelection = dialogService.showOptionDialog(Main.frame, "Select one of the options", "Selection", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, convertSelectionOptions, convertSelectionOptions[1]);
-                Debug.log("-- menu selection " +convertSelection);
+                Object[] convertSelectionOptions = { "Cryptocurrency", "Current currency (" + Main.currency + ")" };
+                convertSelection = dialogService.showOptionDialog(Main.frame, "Select one of the options", "Selection",
+                        JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, convertSelectionOptions,
+                        convertSelectionOptions[1]);
+                Debug.log("-- menu selection " + convertSelection);
             } else {
                 convertSelection = 0;
             }
@@ -436,14 +457,15 @@ public class PanelConverter {
                 case 0:
                     Object[] options = Main.gui.webData.coin.toArray();
 
-                    Object selectedValue = dialogService.showInputDialog(Main.frame, "Select cryptocurrency to add", "Add To Portfolio", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+                    Object selectedValue = dialogService.showInputDialog(Main.frame, "Select cryptocurrency to add",
+                            "Add To Portfolio", JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
                     if (selectedValue == null) {
                         Debug.log("-- cancel");
                         return;
                     } else {
-                        Debug.log("-- "+selectedValue);
+                        Debug.log("-- " + selectedValue);
                     }
-    
+
                     if (nr == 1) {
                         buttonCurrency1.setText(selectedValue.toString());
                         for (int i = 0; i < Main.gui.webData.coin.size(); ++i) {
@@ -488,7 +510,8 @@ public class PanelConverter {
             Debug.log("Button Switch Clicked");
 
             if (priceCurrency2 == 0 || priceCurrency1 == 0) {
-                dialogService.showMessageDialog(Main.frame, "You must select a cryptocurrency for both fields", "Select Cryptocurrencies", JOptionPane.PLAIN_MESSAGE);
+                dialogService.showMessageDialog(Main.frame, "You must select a cryptocurrency for both fields",
+                        "Select Cryptocurrencies", JOptionPane.PLAIN_MESSAGE);
                 return;
             }
 
@@ -509,16 +532,16 @@ public class PanelConverter {
             priceCurrency2 = price1;
             retrieveText(1, info2);
             retrieveText(2, info1);
-            
+
             serialize();
         }
     }
 
-    //@SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     private void deserialize() {
         try {
             if (!(new File(Main.converterSerLocation).canRead())) {
-                Debug.log("ERROR: Couldn't find "+Main.converterSerLocation+".. skipping");
+                Debug.log("ERROR: Couldn't find " + Main.converterSerLocation + ".. skipping");
                 // default settings if none exists
                 priceCurrency1 = Main.gui.webData.coin.get(0).price;
                 priceCurrency2 = Main.gui.webData.coin.get(1).price;
@@ -542,7 +565,7 @@ public class PanelConverter {
             infoCurrency2 = (String) in.readObject();
             in.close();
             Debug.log("Deserialized Converter From " + Main.converterSerLocation);
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             Debug.log("ERROR: PanelConverter.deserialize(), deleting " + Main.converterSerLocation);
             File deleteFile = new File(Main.converterSerLocation);
             deleteFile.delete();
@@ -551,7 +574,8 @@ public class PanelConverter {
 
     private void serialize() {
         try {
-            if ((priceCurrency1 == 0 || priceCurrency2 == 0) && (!buttonCurrency2.getText().equals(Main.currency))) return;
+            if ((priceCurrency1 == 0 || priceCurrency2 == 0) && (!buttonCurrency2.getText().equals(Main.currency)))
+                return;
 
             FileOutputStream file = new FileOutputStream(Main.converterSerLocation);
             BufferedOutputStream buffer = new BufferedOutputStream(file);
@@ -565,8 +589,9 @@ public class PanelConverter {
             out.writeObject(infoCurrency1);
             out.writeObject(infoCurrency2);
             out.close();
-            //Debug.log("Serialized Converter To " + Main.converterSerLocation); // too noisy
-        } catch(Exception ex) {
+            // Debug.log("Serialized Converter To " + Main.converterSerLocation); // too
+            // noisy
+        } catch (Exception ex) {
             Debug.log("EXCEPTION: PanelConverter.java - serialize()");
             ex.printStackTrace();
         }
@@ -575,66 +600,108 @@ public class PanelConverter {
     // ========================================
     // PUBLIC GETTERS AND METHODS FOR TESTING
     // ========================================
-    
+
     // Currency button getters
-    public JButton getButtonCurrency1() { return buttonCurrency1; }
-    public JButton getButtonCurrency2() { return buttonCurrency2; }
-    
+    public JButton getButtonCurrency1() {
+        return buttonCurrency1;
+    }
+
+    public JButton getButtonCurrency2() {
+        return buttonCurrency2;
+    }
+
     // Price getters and setters
-    public double getPriceCurrency1() { return priceCurrency1; }
-    public double getPriceCurrency2() { return priceCurrency2; }
-    public void setPriceCurrency1(double price) { priceCurrency1 = price; }
-    public void setPriceCurrency2(double price) { priceCurrency2 = price; }
-    
+    public double getPriceCurrency1() {
+        return priceCurrency1;
+    }
+
+    public double getPriceCurrency2() {
+        return priceCurrency2;
+    }
+
+    public void setPriceCurrency1(double price) {
+        priceCurrency1 = price;
+    }
+
+    public void setPriceCurrency2(double price) {
+        priceCurrency2 = price;
+    }
+
     // Field getters
-    public JTextField getFieldCurrency1() { return fieldCurrency1; }
-    public JTextField getFieldCurrency2() { return fieldCurrency2; }
-    
+    public JTextField getFieldCurrency1() {
+        return fieldCurrency1;
+    }
+
+    public JTextField getFieldCurrency2() {
+        return fieldCurrency2;
+    }
+
     // Info getters and setters
-    public String getInfoCurrency1() { return infoCurrency1; }
-    public String getInfoCurrency2() { return infoCurrency2; }
-    public void setInfoCurrency1(String info) { infoCurrency1 = info; }
-    public void setInfoCurrency2(String info) { infoCurrency2 = info; }
-    
+    public String getInfoCurrency1() {
+        return infoCurrency1;
+    }
+
+    public String getInfoCurrency2() {
+        return infoCurrency2;
+    }
+
+    public void setInfoCurrency1(String info) {
+        infoCurrency1 = info;
+    }
+
+    public void setInfoCurrency2(String info) {
+        infoCurrency2 = info;
+    }
+
     // Overview components
-    public JEditorPane getOverviewText() { return overviewText; }
-    public JEditorPane getTextBox1() { return textBox1; }
-    public JEditorPane getTextBox2() { return textBox2; }
-    
+    public JEditorPane getOverviewText() {
+        return overviewText;
+    }
+
+    public JEditorPane getTextBox1() {
+        return textBox1;
+    }
+
+    public JEditorPane getTextBox2() {
+        return textBox2;
+    }
+
     // Public wrapper for private methods
     public String testCalculateCurrency(double amount) {
         return calculateCurrency(amount);
     }
-    
+
     public void testCalculateGlobal() {
         calculateGlobal();
     }
-    
+
     public void testRetrieveText(int box, String info) {
         retrieveText(box, info);
     }
-    
+
     public void testSerialize() {
         serialize();
     }
-    
+
     public void testDeserialize() {
         deserialize();
     }
-    
+
     // Test helper methods
     public void setupTestCurrencies(String currency1Name, String currency2Name, double price1, double price2) {
-        if (buttonCurrency1 != null) buttonCurrency1.setText(currency1Name);
-        if (buttonCurrency2 != null) buttonCurrency2.setText(currency2Name);
+        if (buttonCurrency1 != null)
+            buttonCurrency1.setText(currency1Name);
+        if (buttonCurrency2 != null)
+            buttonCurrency2.setText(currency2Name);
         priceCurrency1 = price1;
         priceCurrency2 = price2;
     }
-    
+
     public void simulateSwitch() {
         if (priceCurrency2 == 0 || priceCurrency1 == 0) {
             return; // Cannot switch with zero prices
         }
-        
+
         String button1 = buttonCurrency1.getText();
         String button2 = buttonCurrency2.getText();
         String field1 = fieldCurrency1.getText();

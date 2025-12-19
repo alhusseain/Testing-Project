@@ -2567,4 +2567,76 @@ public class TestDriver_PanelPortfolio {
             assertFalse(result, "Should not detect non-existent coin as duplicate");
         }
     }
+
+    @Nested
+    @DisplayName("TDD Red-Green-Refactor Tests - Portfolio Edge Cases")
+    class TDDRedGreenRefactorTests {
+
+        @Mock
+        private PanelPortfolio.DialogService mockDialogService;
+
+        private PanelPortfolio unitTestPanel;
+
+        @BeforeEach
+        void setupMocks() {
+            MockitoAnnotations.openMocks(this);
+        }
+
+        @Test
+        @DisplayName("TDD-P01: refreshPortfolio should handle division by stored price of zero")
+        void testRefreshPortfolioDivisionByZeroPrice() throws Exception {
+            // RED PHASE: Exposes REAL division by zero bug in refreshPortfolio()
+
+            // EDGE CASE: When a coin's stored price is 0 and currency conversion is triggered, the calculation divides by zero
+            // CURRENT BEHAVIOR (Line 754-755 in PanelPortfolio.java):
+            //   portfolio_price *= (coin.price / webData.portfolio.get(nr).get(i).price);
+            //   If the stored .price is 0, this causes DIVISION BY ZERO
+            // EXPECTED BEHAVIOR: Should skip or handle zero price gracefully
+
+            // FIX LOCATION: PanelPortfolio.refreshPortfolio() method, around line 754
+            // FIX: Add check: if (webData.portfolio.get(nr).get(i).price == 0) continue;
+            if (Main.gui.webData.portfolio.size() == 0) {
+                Main.gui.webData.portfolio.add(new ArrayList<>());
+                Main.gui.webData.portfolio_names.add("TestPortfolio");
+            }
+            
+            int currentNr = Main.gui.webData.portfolio_nr;
+            ArrayList<WebData.Coin> savedPortfolio = new ArrayList<>(Main.gui.webData.portfolio.get(currentNr));
+            String savedCurrency = Main.currency;
+            
+            // Create a coin with stored price of 0 (edge case: data corruption or delisted coin)
+            Main.gui.webData.portfolio.get(currentNr).clear();
+            WebData.Coin zeroPriceCoin = Main.gui.webData.getCoin();
+            zeroPriceCoin.setName("ZeroPriceCoin");
+            zeroPriceCoin.setPrice(0.0);                    // Current price = 0
+            zeroPriceCoin.setPortfolioAmount(10.0);
+            zeroPriceCoin.setPortfolioPrice(50.0);
+            zeroPriceCoin.setPortfolioCurrency("EUR");      // Different from Main.currency to trigger conversion
+            Main.gui.webData.portfolio.get(currentNr).add(zeroPriceCoin);
+            
+            // Ensure Main.currency is different to trigger the else branch (line 753-758)
+            Main.currency = "USD";
+            
+            SwingUtilities.invokeAndWait(() -> {
+                unitTestPanel = new PanelPortfolio(mockDialogService);
+            });
+            
+            // This should not produce NaN or Infinity values
+            assertDoesNotThrow(() -> {
+                unitTestPanel.refreshPortfolio();
+            }, "TDD-P01: refreshPortfolio should not throw for zero stored price");
+            
+            WebData.Coin refreshedCoin = Main.gui.webData.portfolio.get(currentNr).get(0);
+            // RED PHASE: This will FAIL because division by zero produces NaN or Infinity
+            assertFalse(Double.isNaN(refreshedCoin.getPortfolioPrice()),
+                "TDD-P01 RED: Portfolio price should not be NaN after refresh");
+            assertFalse(Double.isInfinite(refreshedCoin.getPortfolioPrice()),
+                "TDD-P01 RED: Portfolio price should not be Infinite after refresh");
+            
+            // Restore original state
+            Main.currency = savedCurrency;
+            Main.gui.webData.portfolio.get(currentNr).clear();
+            Main.gui.webData.portfolio.get(currentNr).addAll(savedPortfolio);
+        }
+    }
 }

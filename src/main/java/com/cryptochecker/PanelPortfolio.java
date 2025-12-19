@@ -752,8 +752,14 @@ public class PanelPortfolio {
                 webData.portfolio.get(nr).get(i).portfolio_gains = webData.portfolio.get(nr).get(i).portfolio_value
                         - webData.portfolio.get(nr).get(i).portfolio_value_start;
             } else {
-                webData.portfolio.get(nr).get(i).portfolio_price *= (coin.price
-                        / webData.portfolio.get(nr).get(i).price); // convert portfolio_start_price to new currency
+                // Fix -- Guard against division by zero
+                // When stored coin price is 0 (delisted coin, data corruption),
+                // division produces NaN/Infinity which corrupts portfolio data.
+                double storedPrice = webData.portfolio.get(nr).get(i).price;
+                if (storedPrice != 0) {
+                    webData.portfolio.get(nr).get(i).portfolio_price *= (coin.price / storedPrice);
+                }
+
                 webData.portfolio.get(nr).get(i).portfolio_value = coin.price
                         * webData.portfolio.get(nr).get(i).portfolio_amount; // calculate current value of portfolio
                 webData.portfolio.get(nr).get(i).portfolio_gains = webData.portfolio.get(nr).get(i).portfolio_value

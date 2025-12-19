@@ -1468,5 +1468,45 @@ public class TestDriver_PanelConverter {
             assertNotNull(unitTestConverter, "Converter should be created with mock dialog");
             assertNotNull(mockDialogService, "Mock dialog service should exist");
         }
+    @Nested
+    @DisplayName("TDD Red-Green-Refactor Tests - Converter Edge Cases")
+        class TDDRedGreenRefactorTests {
+
+            @Mock
+            private PanelConverter.DialogService mockDialogService;
+
+            private PanelConverter unitTestConverter;
+
+            @BeforeEach
+            void setupMocks() {
+                MockitoAnnotations.openMocks(this);
+            }
+
+            @Test
+            @DisplayName("TDD-C01: Conversion should reject negative prices (returns negative result currently)")
+            void testConversionRejectsNegativePrices() throws Exception {
+                // RED PHASE: Exposes REAL bug - negative prices produce negative results
+                // EDGE CASE: If price data somehow becomes negative (API error, corruption), the conversion produces a NEGATIVE result which is nonsensical
+
+                // CURRENT BEHAVIOR (Line 332-345 in PanelConverter.java):
+                //   calculateCurrency() does NOT validate for negative prices
+                //   With price1=-100, price2=50, amount=1: result = (-100/50)*1 = -2
+                // EXPECTED BEHAVIOR: Should return "0" or error for negative prices
+
+                // FIX LOCATION: PanelConverter.calculateCurrency() method, around line 332
+                // FIX: Add validation at start: if (priceCurrency1 < 0 || priceCurrency2 < 0) return "0";
+                SwingUtilities.invokeAndWait(() -> {
+                    unitTestConverter = new PanelConverter(mockDialogService);
+                    unitTestConverter.setupTestCurrencies("Bitcoin", "Ethereum", -100.0, 50.0);
+                });
+                String result = unitTestConverter.testCalculateCurrency(1.0);
+                double resultValue = Double.parseDouble(result.replace(",", ""));
+                
+                // RED PHASE: This FAILS because negative price produces negative result (-2.0)
+                // After GREEN phase fix, result should be 0 (invalid input)
+                assertTrue(resultValue >= 0, 
+                    "TDD-C01 RED: Conversion with negative prices should return 0, not negative value. Got: " + resultValue);
+            }
+        }
     }
 }
