@@ -22,7 +22,7 @@ public class WebData {
         }
     }
 
-    String fetchJson(String urlString) throws IOException, InterruptedException {
+    public String fetchJson(String urlString) throws IOException, InterruptedException {
         int attempts = 0;
         while (attempts < 3) { // retry up to 3 times
             URL url = new URL(urlString);
@@ -114,10 +114,10 @@ public class WebData {
                 Main.gui.webData.fetch();
                 long timerEnd = System.nanoTime(); // TIMER STOP
                 Debug.log("TIMER - Main.gui.webData.fetch() took\n--seconds: "+(timerEnd - timerStart)/1000000000.0+"\n--milliseconds: "+((timerEnd-timerStart)/1000000.0)+"\n--nanoseconds: "+(timerEnd-timerStart));
-    
+
                 Main.gui.panelPortfolio.refreshPortfolio();
                 Main.gui.panelPortfolio.serializePortfolio();
-    
+
                 Main.gui.panelCoin.reCreate();
                 Main.gui.panelConverter.reCreate();
                 Main.gui.panelPortfolio.reCreate();
@@ -165,12 +165,12 @@ public class WebData {
         "total_market_cap_dkk", "total_market_cap_gbp", "total_market_cap_hkd", "total_market_cap_huf", "total_market_cap_idr", "total_market_cap_ils", "total_market_cap_inr", "total_market_cap_jpy", "total_market_cap_krw", "total_market_cap_mxn", "total_market_cap_myr",
         "total_market_cap_nok", "total_market_cap_nzd", "total_market_cap_php", "total_market_cap_pkr", "total_market_cap_pln", "total_market_cap_rub", "total_market_cap_sgd", "total_market_cap_thb", "total_market_cap_try", "total_market_cap_twd", "total_market_cap_zar"})
         long total_market_cap;
-        
+
         @SerializedName(value="total_24h_volume_usd", alternate={"total_24h_volume_sek", "total_24h_volume_eur", "total_24h_volume_aud", "total_24h_volume_brl", "total_24h_volume_cad", "total_24h_volume_chf", "total_24h_volume_clp", "total_24h_volume_cny", "total_24h_volume_czk",
         "total_24h_volume_dkk", "total_24h_volume_gbp", "total_24h_volume_hkd", "total_24h_volume_huf", "total_24h_volume_idr", "total_24h_volume_ils", "total_24h_volume_inr", "total_24h_volume_jpy", "total_24h_volume_krw", "total_24h_volume_mxn", "total_24h_volume_myr",
         "total_24h_volume_nok", "total_24h_volume_nzd", "total_24h_volume_php", "total_24h_volume_pkr", "total_24h_volume_pln", "total_24h_volume_rub", "total_24h_volume_sgd", "total_24h_volume_thb", "total_24h_volume_try", "total_24h_volume_twd", "total_24h_volume_zar"})
         long total_24h_volume;
-        
+
         double bitcoin_percentage_of_market_cap;
         int active_currencies;
         int active_assets;
@@ -203,11 +203,11 @@ public class WebData {
     }
 
     public class Coin implements Serializable, Cloneable {
-        private static final long serialVersionUID = 1L;
+        public final long serialVersionUID = 1L;
 
-        String id;
-        String name;
-        String symbol;
+        public String id;
+        public String name;
+        public String symbol;
 
         @SerializedName("market_cap_rank")
         int rank;
@@ -322,7 +322,7 @@ public class WebData {
         public double getPercentChange24h() { return percent_change_24h; }
         public double getPercentChange7d() { return percent_change_7d; }
         public String getLastUpdated() { return last_updated; }
-        
+
         public double getPortfolioAmount() { return portfolio_amount; }
         public double getPortfolioPrice() { return portfolio_price; }
         public double getPortfolioValue() { return portfolio_value; }
@@ -330,7 +330,7 @@ public class WebData {
         public String getPortfolioCurrency() { return portfolio_currency; }
         public double getPortfolioPriceStart() { return portfolio_price_start; }
         public double getPortfolioValueStart() { return portfolio_value_start; }
-        
+
         // testing setters
         public void setPortfolioAmount(double amount) { portfolio_amount = amount; }
         public void setPortfolioPrice(double price) { portfolio_price = price; }
