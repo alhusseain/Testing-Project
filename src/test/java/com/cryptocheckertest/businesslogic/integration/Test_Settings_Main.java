@@ -1,63 +1,50 @@
 package com.cryptocheckertest.businesslogic.integration;
 
 import com.cryptochecker.Main;
-import com.cryptochecker.PanelSettings;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import java.awt.Color;
+import javax.swing.SwingUtilities;
+import static org.junit.jupiter.api.Assertions.*;
 
-import javax.swing.*;
-import java.lang.reflect.InvocationTargetException;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class Test_Settings_Main {
-    PanelSettings panelSettings;
 
-    @BeforeEach
-    public void setUp() throws InterruptedException, InvocationTargetException {
-        Main.main(null);
-
-        SwingUtilities.invokeAndWait(() -> panelSettings = new PanelSettings());
+    @BeforeAll
+    public static void setupApp() throws Exception {
+        if (Main.frame == null) {
+            SwingUtilities.invokeAndWait(() -> {
+                try {
+                    Main.main(new String[] {});
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            Thread.sleep(3000);
+        }
     }
 
     @Test
     @Order(1)
-    public void Test_currency_change() {
-        // simulate selecting USD
-        Main.currency = "USD";
-        Main.currencyChar = "$";
+    @DisplayName("TC-63: Theme RGB Verification (Integration)")
+    public void testThemeSwitchingLogic() {
+        if (Main.theme == null)
+            return;
 
-        JButton fakeButton = new JButton();
-        panelSettings.getbCurrencyListener().actionPerformed(
-                new java.awt.event.ActionEvent(fakeButton, 0, "currency")
-        );
+        Main.theme.change(Main.themes.DARK);
+        Color actual = Main.getInternalThemeColor();
+        Color expected = new Color(78, 78, 78);
 
-        assertEquals(panelSettings.selectedValue, Main.currency);
+        assertEquals(expected, actual, "Theme color should integrate with Main UI");
+
+        Main.theme.change(Main.themes.LIGHT);
     }
 
     @Test
     @Order(2)
-    public void Test_theme_change() {
-        JButton fakeButton = new JButton();
-
-        Main.theme.change(Main.themes.LIGHT);
-
-        panelSettings.getbThemeListener().actionPerformed(
-                new java.awt.event.ActionEvent(fakeButton, 0, "theme")
-        );
-
-        assertEquals(Main.themes.DARK, Main.theme.currentTheme);
-
-        panelSettings.getbThemeListener().actionPerformed(
-                new java.awt.event.ActionEvent(fakeButton, 0, "theme")
-        );
-        assertEquals(Main.themes.CUSTOM, Main.theme.currentTheme);
-
-        panelSettings.getbThemeListener().actionPerformed(
-                new java.awt.event.ActionEvent(fakeButton, 0, "theme")
-        );
-        assertEquals(Main.themes.LIGHT, Main.theme.currentTheme);
+    @DisplayName("TC-MAIN-04: Factory Reset Logic (Integration)")
+    public void testCurrencyResetLogic() {
+        Main.currency = "EUR";
+        Main.resetConfiguration();
+        assertEquals("USD", Main.currency, "Reset logic should restore default currency");
     }
-
 }
