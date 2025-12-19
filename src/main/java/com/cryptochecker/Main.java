@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.*; // provides gui related components (frame, jbutton)
 
+
 public class Main {
     public static Main gui;
     public static JFrame frame;
@@ -35,7 +36,7 @@ public class Main {
     public static final Dimension tableIntercellSpacing = new Dimension(5, 5);
 
     public static final String folderLocation = System.getProperty("user.home")+"/.crypto-checker/";
-    public static final String dataSerLocation = folderLocation+"data.ser";
+    public static String dataSerLocation = folderLocation+"data.ser";
     public static final String portfolioSerLocation = folderLocation+"portfolio.ser";
     public static final String settingsSerLocation = folderLocation+"settings.ser";
     public static final String converterSerLocation = folderLocation+"converter.ser";
@@ -56,7 +57,7 @@ public class Main {
         }
     }
 
-    private void setupGUI() throws Exception {
+    public void setupGUI() throws Exception {
         debug = new Debug(); // log file
 
         frame = new JFrame("Crypto Checker"); // create frame of program
@@ -89,7 +90,7 @@ public class Main {
         Main.frame.getContentPane().repaint();
     }
 
-    private void deserializeSettings() throws Exception { // restore theme setting from data
+    public void deserializeSettings() throws Exception { // restore theme setting from data
         if (!(new File(settingsSerLocation).canRead())) {
             theme = new Theme(themes.LIGHT);
             Debug.log("ERROR: Couldn't find "+settingsSerLocation+".. skipping");
@@ -123,7 +124,7 @@ public class Main {
     }
 
     @SuppressWarnings("unchecked") // coin = (ArrayList<Coin> in.readObject()) supressing
-    private void deserializePortfolio() throws Exception {
+    public void deserializePortfolio() throws Exception {
         if (!(new File(portfolioSerLocation).canRead())) {
             webData.portfolio = new ArrayList<ArrayList<WebData.Coin>>();
             webData.portfolio.add(new ArrayList<WebData.Coin>());
