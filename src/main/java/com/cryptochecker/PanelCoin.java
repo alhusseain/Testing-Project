@@ -20,6 +20,7 @@ public class PanelCoin {
     private TableModel model;
     private JScrollPane pane;
 
+
     private TableRowSorter<TableModel> rowSorter;
     private JTextField headerSearchField;
     private final int rowHeight = 40;
@@ -194,6 +195,7 @@ public class PanelCoin {
         private String[] columnNames = {"#", "Name", "Value", "1h", "24h", "7d", "Market Cap"};
         public ArrayList<WebData.Coin> list = Main.gui.webData.coin;
 
+        public void setData(ArrayList<WebData.Coin> list) { this.list = list; }
         public int getColumnCount() {
             return columnNames.length;
         }

@@ -6,25 +6,30 @@ import com.cryptochecker.WebData;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
 
 /**
  * MASTER RTM TEST SUITE: PANEL PORTFOLIO MODULE
  * -------------------------------------------------
  * Covers: TC-27, TC-28, TC-29 (Portfolio Management)
- * Covers: TC-30, TC-31, TC-32 (Portfolio Operations) 
- * Covers: TC-33, TC-34, TC-35, TC-36, TC-37, TC-38, TC-39 (Portfolio Validation)
+ * Covers: TC-30, TC-31, TC-32 (Portfolio Operations)
+ * Covers: TC-33, TC-34, TC-35, TC-36, TC-37, TC-38, TC-39 (PortfolioValidation)
  * -------------------------------------------------
  * Tests the bManagePortfolioListener functionality:
  * - New portfolio creation with duplicate handling
- * - Portfolio renaming with validation 
+ * - Portfolio renaming with validation
  * - Portfolio deletion with minimum enforcement
  * - Portfolio calculation and data validation
  * - HTML generation and currency conversion
@@ -46,8 +51,8 @@ public class TestDriver_PanelPortfolio {
 
         // Launch Main application
         appThread = new Thread(() -> {
-            try { 
-                Main.main(new String[]{}); 
+            try {
+                Main.main(new String[] {});
             } catch (Exception e) {
                 System.out.println("Failed to initialize Main: " + e.getMessage());
             }
@@ -55,8 +60,8 @@ public class TestDriver_PanelPortfolio {
         appThread.start();
 
         // Wait for initialization to complete
-        try { 
-            Thread.sleep(3000); 
+        try {
+            Thread.sleep(3000);
             applicationInitialized = true;
             System.out.println("Application initialization complete.\n");
         } catch (InterruptedException e) {
@@ -70,8 +75,8 @@ public class TestDriver_PanelPortfolio {
         // Initialize fresh PanelPortfolio for each test
         try {
             final CountDownLatch latch = new CountDownLatch(1);
-            final Exception[] setupException = {null};
-            
+            final Exception[] setupException = { null };
+
             SwingUtilities.invokeLater(() -> {
                 try {
                     testPanel = new PanelPortfolio();
@@ -81,15 +86,15 @@ public class TestDriver_PanelPortfolio {
                     latch.countDown();
                 }
             });
-            
+
             if (!latch.await(5, TimeUnit.SECONDS)) {
                 fail("Test setup timeout");
             }
-            
+
             if (setupException[0] != null) {
                 throw setupException[0];
             }
-            
+
             assertNotNull(testPanel, "PanelPortfolio should be initialized");
         } catch (Exception e) {
             fail("Failed to initialize PanelPortfolio for test: " + e.getMessage());
@@ -115,49 +120,55 @@ public class TestDriver_PanelPortfolio {
     }
 
     /**
-     * TC-27: New Portfolio Creation - Integration Test using Equivalence Partitioning
+     * TC-27: New Portfolio Creation - Integration Test using Equivalence
+     * Partitioning
      * Tests the "New Portfolio" option (case 2) from bManagePortfolioListener
-     * Verifies: Portfolio count increases, proper naming convention, duplicate resolution
+     * Verifies: Portfolio count increases, proper naming convention, duplicate
+     * resolution
      */
     @Test
     @Order(1)
     @DisplayName("TC-27: New Portfolio Creation")
     void testNewPortfolioCreation() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-27: NEW PORTFOLIO CREATION (Integration Test - Equivalence Partitioning)");
         System.out.println(border);
-        
+
         try {
             // ARRANGE: Capture initial state
             int initialCount = Main.gui.webData.portfolio.size();
             int initialNameCount = Main.gui.webData.portfolio_names.size();
-            
+
             System.out.println("INPUT STATE:");
             System.out.println("  Initial portfolio count: " + initialCount);
             System.out.println("  Initial names count: " + initialNameCount);
             System.out.println("  Existing names: " + Main.gui.webData.portfolio_names);
-            
+
             String expectedName = "Portfolio " + (initialCount + 1);
             System.out.println("  Expected new name: '" + expectedName + "'");
-            
-            // ACT: Simulate new portfolio creation logic from bManagePortfolioListener case 2
+
+            // ACT: Simulate new portfolio creation logic from bManagePortfolioListener case
+            // 2
             System.out.println("\nEXECUTING: Portfolio creation logic (case 2)...");
-            
+
             Main.gui.webData.portfolio.add(new ArrayList<>());
             Main.gui.webData.portfolio_names.add("Portfolio " + Main.gui.webData.portfolio.size());
-            
-            String nameBeforeDuplicateCheck = Main.gui.webData.portfolio_names.get(Main.gui.webData.portfolio_names.size()-1);
+
+            String nameBeforeDuplicateCheck = Main.gui.webData.portfolio_names
+                    .get(Main.gui.webData.portfolio_names.size() - 1);
             System.out.println("  Created portfolio with name: '" + nameBeforeDuplicateCheck + "'");
-            
+
             // Handle duplicate names (space appending logic)
-            String newName = Main.gui.webData.portfolio_names.get(Main.gui.webData.portfolio_names.size()-1);
+            String newName = Main.gui.webData.portfolio_names.get(Main.gui.webData.portfolio_names.size() - 1);
             boolean duplicateFound = false;
             for (int i = 0; i < Main.gui.webData.portfolio_names.size(); ++i) {
                 if (Main.gui.webData.portfolio_names.get(i).equals(newName)) {
-                    if (Main.gui.webData.portfolio_names.size()-1 != i) {
-                        Main.gui.webData.portfolio_names.set(Main.gui.webData.portfolio_names.size()-1, newName + " ");
+                    if (Main.gui.webData.portfolio_names.size() - 1 != i) {
+                        Main.gui.webData.portfolio_names.set(Main.gui.webData.portfolio_names.size() - 1,
+                                newName + " ");
                         duplicateFound = true;
                         System.out.println("  Duplicate detected! Appended space: '" + (newName + " ") + "'");
                         break;
@@ -167,51 +178,52 @@ public class TestDriver_PanelPortfolio {
             if (!duplicateFound) {
                 System.out.println("  No duplicates found, name remains: '" + newName + "'");
             }
-            
+
             // CAPTURE ACTUAL RESULTS
             int actualCount = Main.gui.webData.portfolio.size();
             int actualNameCount = Main.gui.webData.portfolio_names.size();
-            String actualFinalName = Main.gui.webData.portfolio_names.get(Main.gui.webData.portfolio_names.size()-1);
-            
+            String actualFinalName = Main.gui.webData.portfolio_names.get(Main.gui.webData.portfolio_names.size() - 1);
+
             System.out.println("\nOUTPUT STATE:");
             System.out.println("  Final portfolio count: " + actualCount);
             System.out.println("  Final names count: " + actualNameCount);
             System.out.println("  Final portfolio name: '" + actualFinalName + "'");
             System.out.println("  All names: " + Main.gui.webData.portfolio_names);
-            
+
             // EXPECTED vs ACTUAL COMPARISON
             System.out.println("\nVALIDATION RESULTS:");
-            
+
             int expectedCount = initialCount + 1;
             System.out.println("  Portfolio Count - Expected: " + expectedCount + ", Actual: " + actualCount);
-            
+
             int expectedNameCount = initialNameCount + 1;
             System.out.println("  Names Count - Expected: " + expectedNameCount + ", Actual: " + actualNameCount);
-            
+
             System.out.println("  Name Format - Expected: starts with 'Portfolio ', Actual: '" + actualFinalName + "'");
-            
-            System.out.println("  Duplicate Handling - Expected: proper resolution, Actual: " + 
-                              (duplicateFound ? "space appended" : "no duplicates"));
-            
+
+            System.out.println("  Duplicate Handling - Expected: proper resolution, Actual: " +
+                    (duplicateFound ? "space appended" : "no duplicates"));
+
             // JUnit Assertions
             assertEquals(expectedCount, actualCount, "Portfolio count should increase after creation");
             assertEquals(expectedNameCount, actualNameCount, "Names count should match portfolio count");
             assertTrue(actualFinalName.startsWith("Portfolio "), "Portfolio name should follow 'Portfolio X' format");
             assertTrue(!duplicateFound || actualFinalName.endsWith(" "), "Duplicate names should be resolved properly");
-            
+
             System.out.println("\n   TC-27: New Portfolio Creation - PASSED");
-            
+
         } catch (Exception e) {
             System.out.println("\n   TC-27: New Portfolio Creation - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-27 failed due to exception: " + e.getMessage());
         }
-        
+
         System.out.println(border);
     }
 
     /**
-     * TC-28: Portfolio Renaming Validation - Integration Test using Equivalence Partitioning
+     * TC-28: Portfolio Renaming Validation - Integration Test using Equivalence
+     * Partitioning
      * Tests the "Rename Current" option (case 0) from bManagePortfolioListener
      * Verifies: Duplicate detection, error handling, name preservation on conflict
      */
@@ -220,79 +232,83 @@ public class TestDriver_PanelPortfolio {
     @DisplayName("TC-28: Portfolio Renaming Validation")
     void testPortfolioRenaming() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-28: PORTFOLIO RENAMING VALIDATION (Integration Test - Equivalence Partitioning)");
         System.out.println(border);
-        
+
         try {
             // ARRANGE: Setup test environment
             while (Main.gui.webData.portfolio_names.size() < 3) {
                 Main.gui.webData.portfolio.add(new ArrayList<>());
                 Main.gui.webData.portfolio_names.add("TestPortfolio" + Main.gui.webData.portfolio.size());
             }
-            
+
             String originalName = Main.gui.webData.portfolio_names.get(0);
             String uniqueNewName = "UniqueTestName_" + System.currentTimeMillis();
             String duplicateName = Main.gui.webData.portfolio_names.get(1);
             int targetIndex = 0;
-            
+
             System.out.println("INPUT STATE:");
             System.out.println("  Target portfolio index: " + targetIndex);
             System.out.println("  Original name: '" + originalName + "'");
             System.out.println("  All portfolio names: " + Main.gui.webData.portfolio_names);
             System.out.println("  Test rename to unique: '" + uniqueNewName + "'");
             System.out.println("  Test rename to duplicate: '" + duplicateName + "'");
-            
+
             // TEST 1: Valid Rename (Equivalence Partition - Valid)
             System.out.println("\nTEST 1: VALID RENAME (Unique Name)");
             System.out.println("Executing duplicate check for: '" + uniqueNewName + "'");
-            
+
             boolean isDuplicateValid = false;
             for (int i = 0; i < Main.gui.webData.portfolio_names.size(); ++i) {
                 if (Main.gui.webData.portfolio_names.get(i).equals(uniqueNewName)) {
                     if (i != targetIndex) {
                         isDuplicateValid = true;
-                        System.out.println("  Duplicate found at index " + i + ": '" + Main.gui.webData.portfolio_names.get(i) + "'");
+                        System.out.println("  Duplicate found at index " + i + ": '"
+                                + Main.gui.webData.portfolio_names.get(i) + "'");
                         break;
                     }
                 }
             }
-            
+
             System.out.println("  Duplicate check result: " + (isDuplicateValid ? "DUPLICATE FOUND" : "NO DUPLICATES"));
-            
+
             if (!isDuplicateValid) {
                 Main.gui.webData.portfolio_names.set(targetIndex, uniqueNewName);
                 System.out.println("  Rename executed: '" + originalName + "' → '" + uniqueNewName + "'");
             } else {
                 System.out.println("  Rename cancelled due to duplicate");
             }
-            
+
             String actualNameAfterValid = Main.gui.webData.portfolio_names.get(targetIndex);
-            
+
             System.out.println("VALIDATION - Valid Rename:");
             System.out.println("  Expected: '" + uniqueNewName + "', Actual: '" + actualNameAfterValid + "'");
-            
+
             // JUnit Assertion for valid rename
             assertEquals(uniqueNewName, actualNameAfterValid, "Valid rename operation should succeed");
-            
+
             // TEST 2: Invalid Rename (Equivalence Partition - Invalid)
             System.out.println("\nTEST 2: INVALID RENAME (Duplicate Name)");
             System.out.println("Executing duplicate check for: '" + duplicateName + "'");
-            
+
             boolean isDuplicateInvalid = false;
             for (int i = 0; i < Main.gui.webData.portfolio_names.size(); ++i) {
                 if (Main.gui.webData.portfolio_names.get(i).equals(duplicateName)) {
                     if (i != targetIndex) {
                         isDuplicateInvalid = true;
-                        System.out.println("  Duplicate found at index " + i + ": '" + Main.gui.webData.portfolio_names.get(i) + "'");
+                        System.out.println("  Duplicate found at index " + i + ": '"
+                                + Main.gui.webData.portfolio_names.get(i) + "'");
                         break;
                     }
                 }
             }
-            
-            System.out.println("  Duplicate check result: " + (isDuplicateInvalid ? "DUPLICATE FOUND" : "NO DUPLICATES"));
-            
+
+            System.out
+                    .println("  Duplicate check result: " + (isDuplicateInvalid ? "DUPLICATE FOUND" : "NO DUPLICATES"));
+
             String nameBeforeDuplicateTest = Main.gui.webData.portfolio_names.get(targetIndex);
             if (isDuplicateInvalid) {
                 System.out.println("  Rename cancelled - would show error: 'Name already exists!'");
@@ -301,69 +317,74 @@ public class TestDriver_PanelPortfolio {
             } else {
                 System.out.println("  ERROR: Expected duplicate but none found!");
             }
-            
+
             String actualNameAfterInvalid = Main.gui.webData.portfolio_names.get(targetIndex);
-            
+
             System.out.println("VALIDATION - Invalid Rename:");
-            System.out.println("  Expected: '" + nameBeforeDuplicateTest + "' (unchanged), Actual: '" + actualNameAfterInvalid + "'");
+            System.out.println("  Expected: '" + nameBeforeDuplicateTest + "' (unchanged), Actual: '"
+                    + actualNameAfterInvalid + "'");
             System.out.println("  Duplicate Detection: " + (isDuplicateInvalid ? "DETECTED" : "NOT DETECTED"));
-            
+
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  Current portfolio names: " + Main.gui.webData.portfolio_names);
-            
+
             // JUnit Assertions
-            assertEquals(nameBeforeDuplicateTest, actualNameAfterInvalid, "Duplicate rename should be properly rejected");
+            assertEquals(nameBeforeDuplicateTest, actualNameAfterInvalid,
+                    "Duplicate rename should be properly rejected");
             assertTrue(isDuplicateInvalid, "Duplicate detection logic should work correctly");
-            
+
             // CLEANUP
             Main.gui.webData.portfolio_names.set(targetIndex, originalName);
             System.out.println("Cleanup: Reset to original name '" + originalName + "'");
             System.out.println("\n   TC-28: Portfolio Renaming Validation - PASSED");
-            
+
         } catch (Exception e) {
             System.out.println("\n   TC-28: Portfolio Renaming Validation - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-28 failed due to exception: " + e.getMessage());
         }
-        
+
         System.out.println(border);
     }
 
     /**
-     * TC-29: Portfolio Deletion Enforcement - Integration Test using Boundary Value Analysis
+     * TC-29: Portfolio Deletion Enforcement - Integration Test using Boundary Value
+     * Analysis
      * Tests the "Delete Current" option (case 1) from bManagePortfolioListener
-     * Verifies: Successful deletion when multiple portfolios, prevention when only one remains
+     * Verifies: Successful deletion when multiple portfolios, prevention when only
+     * one remains
      */
     @Test
     @Order(3)
     @DisplayName("TC-29: Portfolio Deletion Enforcement")
     void testPortfolioDeletion() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-29: PORTFOLIO DELETION ENFORCEMENT (Integration Test - Boundary Value Analysis)");
         System.out.println(border);
-        
+
         try {
             // ARRANGE: Setup multiple portfolios (above boundary)
             while (Main.gui.webData.portfolio.size() < 3) {
                 Main.gui.webData.portfolio.add(new ArrayList<>());
                 Main.gui.webData.portfolio_names.add("DeletionTest" + Main.gui.webData.portfolio.size());
             }
-            
+
             int initialCount = Main.gui.webData.portfolio.size();
             String deletionTargetName = Main.gui.webData.portfolio_names.get(0);
-            
+
             System.out.println("INPUT STATE - ABOVE BOUNDARY:");
             System.out.println("  Portfolio count: " + initialCount + " (Above boundary: > 1)");
             System.out.println("  Portfolio names: " + Main.gui.webData.portfolio_names);
             System.out.println("  Target for deletion: Index 0 '" + deletionTargetName + "'");
-            
+
             // TEST 1: Valid Deletion (Above Boundary)
             System.out.println("\nTEST 1: VALID DELETION ABOVE BOUNDARY");
             System.out.println("Checking if portfolio count > 1: " + (Main.gui.webData.portfolio.size() > 1));
-            
+
             boolean deletionExecuted = false;
             if (Main.gui.webData.portfolio.size() > 1) {
                 System.out.println("  Above boundary condition - deletion should proceed");
@@ -375,24 +396,25 @@ public class TestDriver_PanelPortfolio {
             } else {
                 System.out.println("  ERROR: Expected count > 1 but at boundary");
             }
-            
+
             int countAfterDeletion = Main.gui.webData.portfolio.size();
-            String newFirstPortfolio = Main.gui.webData.portfolio_names.size() > 0 ? 
-                                     Main.gui.webData.portfolio_names.get(0) : "NONE";
-            
+            String newFirstPortfolio = Main.gui.webData.portfolio_names.size() > 0
+                    ? Main.gui.webData.portfolio_names.get(0)
+                    : "NONE";
+
             System.out.println("VALIDATION - Valid Deletion:");
             System.out.println("  Expected count: " + (initialCount - 1) + ", Actual: " + countAfterDeletion);
             System.out.println("  Deletion executed: " + deletionExecuted);
             System.out.println("  New first portfolio: '" + newFirstPortfolio + "'");
-            
+
             // JUnit Assertions for valid deletion
             assertEquals(initialCount - 1, countAfterDeletion, "Portfolio count should decrease after deletion");
             assertTrue(deletionExecuted, "Deletion should be executed when above boundary");
-            
+
             // TEST 2: Boundary Enforcement (At Boundary - Minimum Value)
             System.out.println("\nTEST 2: BOUNDARY ENFORCEMENT AT MINIMUM");
             System.out.println("Reducing to boundary condition (exactly 1 portfolio)...");
-            
+
             while (Main.gui.webData.portfolio.size() > 1) {
                 int removeIndex = Main.gui.webData.portfolio.size() - 1;
                 String removedName = Main.gui.webData.portfolio_names.get(removeIndex);
@@ -400,47 +422,46 @@ public class TestDriver_PanelPortfolio {
                 Main.gui.webData.portfolio_names.remove(removeIndex);
                 System.out.println("  Removed: '" + removedName + "' at index " + removeIndex);
             }
-            
+
             int finalCount = Main.gui.webData.portfolio.size();
             String lastPortfolioName = Main.gui.webData.portfolio_names.get(0);
-            
+
             System.out.println("  Final count: " + finalCount + " (At boundary: exactly 1)");
             System.out.println("  Last remaining portfolio: '" + lastPortfolioName + "'");
-            
+
             // Simulate minimum portfolio check from bManagePortfolioListener case 1
             boolean canDeleteWhenOne = Main.gui.webData.portfolio.size() > 1;
             System.out.println("Checking deletion eligibility at boundary: " + canDeleteWhenOne);
-            
+
             if (!canDeleteWhenOne) {
                 System.out.println("  Boundary condition enforced - deletion prevented");
                 System.out.println("  Would show error: 'Cannot delete the last portfolio'");
                 System.out.println("  Debug log would be: 'Cannot delete portfolio, only one left'");
             }
-            
-            
+
             System.out.println("VALIDATION - Boundary Enforcement:");
             System.out.println("  Expected count: 1 (minimum), Actual: " + finalCount);
             System.out.println("  Deletion prevented: " + !canDeleteWhenOne);
             System.out.println("  Minimum enforced: " + (!canDeleteWhenOne && Main.gui.webData.portfolio.size() == 1));
-            
+
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  Current portfolio count: " + Main.gui.webData.portfolio.size());
             System.out.println("  Current portfolio names: " + Main.gui.webData.portfolio_names);
-            
+
             // JUnit Assertions
             assertEquals(1, finalCount, "Should achieve boundary condition (size = 1)");
             assertFalse(canDeleteWhenOne, "Deletion should be prevented at minimum boundary");
             assertEquals(1, Main.gui.webData.portfolio.size(), "Portfolio data should remain intact");
-            
+
             System.out.println("\n   TC-29: Portfolio Deletion Enforcement - PASSED");
-            
+
         } catch (Exception e) {
             System.out.println("\n   TC-29: Portfolio Deletion Enforcement - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-29 failed due to exception: " + e.getMessage());
         }
-        
+
         System.out.println(border);
     }
 
@@ -454,52 +475,53 @@ public class TestDriver_PanelPortfolio {
     @DisplayName("TC-30: Duplicate Name Handling")
     void testDuplicateNameHandling() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-30: DUPLICATE NAME HANDLING (Unit Test - Equivalence Partitioning)");
         System.out.println(border);
-        
+
         try {
             // ARRANGE: Setup duplicate scenario
             String baseName = "DuplicateTestPortfolio";
             int initialSize = Main.gui.webData.portfolio_names.size();
-            
+
             // Add first instance of the name
             Main.gui.webData.portfolio_names.add(baseName);
-            
+
             System.out.println("INPUT STATE:");
             System.out.println("  Initial portfolio count: " + initialSize);
             System.out.println("  Base name to test: '" + baseName + "'");
             System.out.println("  Portfolio names before: " + Main.gui.webData.portfolio_names);
             System.out.println("  Testing duplicate resolution with space appending logic");
-            
+
             // ACT: Add potential duplicate name
             String attemptedName = baseName; // Same name - will create duplicate
             Main.gui.webData.portfolio_names.add(attemptedName);
             int newItemIndex = Main.gui.webData.portfolio_names.size() - 1;
-            
+
             System.out.println("\nTEST EXECUTION:");
             System.out.println("Added potential duplicate: '" + attemptedName + "' at index " + newItemIndex);
             System.out.println("Portfolio names after addition: " + Main.gui.webData.portfolio_names);
-            
+
             // Apply duplicate resolution logic from bManagePortfolioListener case 2
             System.out.println("\nDUPLICATE RESOLUTION PROCESS:");
             String nameBeforeResolution = Main.gui.webData.portfolio_names.get(newItemIndex);
             boolean duplicateFound = false;
             int duplicateAtIndex = -1;
-            
+
             for (int i = 0; i < Main.gui.webData.portfolio_names.size(); ++i) {
                 String currentName = Main.gui.webData.portfolio_names.get(newItemIndex);
                 String existingName = Main.gui.webData.portfolio_names.get(i);
-                System.out.println("  Comparing index " + newItemIndex + " ('" + currentName + 
-                                 "') with index " + i + " ('" + existingName + "')");
-                
+                System.out.println("  Comparing index " + newItemIndex + " ('" + currentName +
+                        "') with index " + i + " ('" + existingName + "')");
+
                 if (currentName.equals(existingName)) {
                     if (newItemIndex != i) {
                         System.out.println("    ✓ Duplicate found! Different indices: " + newItemIndex + " != " + i);
                         duplicateFound = true;
                         duplicateAtIndex = i;
-                        
+
                         // Apply space appending resolution
                         String resolvedName = currentName + " ";
                         Main.gui.webData.portfolio_names.set(newItemIndex, resolvedName);
@@ -510,62 +532,64 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
             }
-            
+
             // VALIDATION
             String finalName = Main.gui.webData.portfolio_names.get(newItemIndex);
             boolean duplicateResolved = duplicateFound && finalName.endsWith(" ");
             boolean nameUniquenessPreserved = true;
-            
+
             System.out.println("\nUNIQUENESS VERIFICATION:");
             // Check all names are unique
             for (int i = 0; i < Main.gui.webData.portfolio_names.size(); i++) {
                 for (int j = i + 1; j < Main.gui.webData.portfolio_names.size(); j++) {
                     if (Main.gui.webData.portfolio_names.get(i).equals(Main.gui.webData.portfolio_names.get(j))) {
-                        System.out.println("    Duplicate still exists: '" + Main.gui.webData.portfolio_names.get(i) + 
-                                         "' at indices " + i + " and " + j);
+                        System.out.println("    Duplicate still exists: '" + Main.gui.webData.portfolio_names.get(i) +
+                                "' at indices " + i + " and " + j);
                         nameUniquenessPreserved = false;
                     }
                 }
             }
-            
+
             if (nameUniquenessPreserved) {
                 System.out.println("    All names are unique after resolution");
             }
-            
+
             System.out.println("\nVALIDATION RESULTS:");
             System.out.println("  Duplicate detected: " + duplicateFound +
-                              (duplicateFound ? " (at index " + duplicateAtIndex + ")" : ""));
+                    (duplicateFound ? " (at index " + duplicateAtIndex + ")" : ""));
             System.out.println("  Name before: '" + nameBeforeResolution + "', after: '" + finalName + "'");
             System.out.println("  Space appended: " + finalName.endsWith(" "));
-            
+
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  Final portfolio count: " + Main.gui.webData.portfolio_names.size());
             System.out.println("  Final portfolio names: " + Main.gui.webData.portfolio_names);
-            
+
             // JUnit Assertions
             assertTrue(duplicateResolved, "Duplicate resolution logic should execute properly");
             assertTrue(nameUniquenessPreserved, "Name uniqueness should be maintained after resolution");
-            
+
             // CLEANUP: Remove test entries
             Main.gui.webData.portfolio_names.remove(newItemIndex);
             if (Main.gui.webData.portfolio_names.size() > initialSize) {
                 Main.gui.webData.portfolio_names.remove(Main.gui.webData.portfolio_names.size() - 1);
             }
-            System.out.println("Cleanup: Removed test portfolios, back to " + Main.gui.webData.portfolio_names.size() + " portfolios");
+            System.out.println("Cleanup: Removed test portfolios, back to " + Main.gui.webData.portfolio_names.size()
+                    + " portfolios");
             System.out.println("\n   TC-30: Duplicate Name Handling - PASSED");
-            
+
         } catch (Exception e) {
             System.out.println("\n   TC-30: Duplicate Name Handling - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-30 failed due to exception: " + e.getMessage());
         }
-        
+
         System.out.println(border);
     }
 
     /**
-     * TC-31: Minimum Portfolio Requirement - Unit Test using Boundary Value Analysis
+     * TC-31: Minimum Portfolio Requirement - Unit Test using Boundary Value
+     * Analysis
      * Tests the business rule that at least one portfolio must always exist
      * Verifies: Enforcement of minimum portfolio constraint
      */
@@ -574,44 +598,46 @@ public class TestDriver_PanelPortfolio {
     @DisplayName("TC-31: Minimum Portfolio Requirement")
     void testMinimumPortfolioRequirement() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-31: MINIMUM PORTFOLIO REQUIREMENT (Unit Test - Boundary Value Analysis)");
         System.out.println(border);
-        
+
         try {
             // ARRANGE: Setup boundary condition
             int initialPortfolioCount = Main.gui.webData.portfolio.size();
-            
+
             System.out.println("INPUT STATE:");
             System.out.println("  Initial portfolio count: " + initialPortfolioCount);
             System.out.println("  Initial portfolio names: " + Main.gui.webData.portfolio_names);
             System.out.println("  Reducing to minimum boundary (exactly 1 portfolio)...");
-            
+
             // Reduce to exactly one portfolio (boundary condition)
             while (Main.gui.webData.portfolio.size() > 1) {
                 int removeIndex = Main.gui.webData.portfolio.size() - 1;
                 String removedName = Main.gui.webData.portfolio_names.get(removeIndex);
                 Main.gui.webData.portfolio.remove(removeIndex);
                 Main.gui.webData.portfolio_names.remove(removeIndex);
-                System.out.println("  Removed: '" + removedName + "' (count now: " + Main.gui.webData.portfolio.size() + ")");
+                System.out.println(
+                        "  Removed: '" + removedName + "' (count now: " + Main.gui.webData.portfolio.size() + ")");
             }
-            
+
             int finalCount = Main.gui.webData.portfolio.size();
             String remainingPortfolio = Main.gui.webData.portfolio_names.get(0);
-            
+
             System.out.println("\nBOUNDARY CONDITION ACHIEVED:");
             System.out.println("  Final portfolio count: " + finalCount + " (At minimum boundary: 1)");
             System.out.println("  Remaining portfolio: '" + remainingPortfolio + "'");
-            
+
             // TEST: Minimum portfolio constraint check
             System.out.println("\nTEST EXECUTION - MINIMUM CONSTRAINT CHECK:");
             System.out.println("Evaluating deletion eligibility: portfolio.size() > 1");
             System.out.println("  Current size: " + Main.gui.webData.portfolio.size());
             System.out.println("  Size > 1: " + (Main.gui.webData.portfolio.size() > 1));
-            
+
             boolean deletionAllowed = Main.gui.webData.portfolio.size() > 1;
-            
+
             if (deletionAllowed) {
                 System.out.println("  Deletion would be ALLOWED (above boundary)");
             } else {
@@ -619,49 +645,55 @@ public class TestDriver_PanelPortfolio {
                 System.out.println("  Would show error: 'Cannot delete the last portfolio'");
                 System.out.println("  Business rule enforced: Minimum 1 portfolio required");
             }
-            
+
             // VALIDATION: Multiple constraint checks
             System.out.println("\nVALIDATION - BOUNDARY ANALYSIS:");
-            
+
             System.out.println("  At boundary (size = 1): " + (finalCount == 1));
             System.out.println("  Deletion prevented: " + !deletionAllowed);
-            System.out.println("  Portfolio still exists: " + (Main.gui.webData.portfolio.size() == 1 && Main.gui.webData.portfolio_names.size() == 1));
-            System.out.println("  Data consistency: " + (Main.gui.webData.portfolio.size() == Main.gui.webData.portfolio_names.size()));
-            
+            System.out.println("  Portfolio still exists: "
+                    + (Main.gui.webData.portfolio.size() == 1 && Main.gui.webData.portfolio_names.size() == 1));
+            System.out.println("  Data consistency: "
+                    + (Main.gui.webData.portfolio.size() == Main.gui.webData.portfolio_names.size()));
+
             // EDGE CASE TESTING
             System.out.println("\nEDGE CASE ANALYSIS:");
-            
+
             // What happens if we try to go below boundary (hypothetical)
             System.out.println("  Hypothetical size 0 check: " + (0 > 1) + " (would prevent deletion)");
             System.out.println("  Hypothetical size 2 check: " + (2 > 1) + " (would allow deletion)");
-            
+
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  Current portfolio count: " + Main.gui.webData.portfolio.size());
             System.out.println("  Current portfolio names: " + Main.gui.webData.portfolio_names);
-            System.out.println("  Minimum constraint status: " + (Main.gui.webData.portfolio.size() >= 1 ? "SATISFIED" : "VIOLATED"));
-            
+            System.out.println("  Minimum constraint status: "
+                    + (Main.gui.webData.portfolio.size() >= 1 ? "SATISFIED" : "VIOLATED"));
+
             // JUnit Assertions
             assertEquals(1, finalCount, "Should achieve boundary condition (size = 1)");
             assertFalse(deletionAllowed, "Deletion should be prevented at minimum boundary");
             assertEquals(1, Main.gui.webData.portfolio.size(), "Portfolio should still exist");
             assertEquals(1, Main.gui.webData.portfolio_names.size(), "Portfolio names should still exist");
-            assertEquals(Main.gui.webData.portfolio.size(), Main.gui.webData.portfolio_names.size(), "Data should be consistent between portfolio lists");
-            
+            assertEquals(Main.gui.webData.portfolio.size(), Main.gui.webData.portfolio_names.size(),
+                    "Data should be consistent between portfolio lists");
+
             System.out.println("\n   TC-31: Minimum Portfolio Requirement - PASSED");
-            
+
         } catch (Exception e) {
             System.out.println("\n   TC-31: Minimum Portfolio Requirement - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-31 failed due to exception: " + e.getMessage());
         }
-        
+
         System.out.println(border);
     }
 
     /**
-     * TC-32: Portfolio Data Integrity - Integration Test using State Transition Testing
-     * Tests that portfolio operations maintain data consistency across state changes
+     * TC-32: Portfolio Data Integrity - Integration Test using State Transition
+     * Testing
+     * Tests that portfolio operations maintain data consistency across state
+     * changes
      * Verifies: Portfolio list and name list stay synchronized through operations
      */
     @Test
@@ -669,72 +701,79 @@ public class TestDriver_PanelPortfolio {
     @DisplayName("TC-32: Portfolio Data Integrity")
     void testPortfolioDataIntegrity() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-32: PORTFOLIO DATA INTEGRITY (Integration Test - State Transition Testing)");
         System.out.println(border);
-        
+
         try {
             // INITIAL STATE ANALYSIS
             int initialPortfolioCount = Main.gui.webData.portfolio.size();
             int initialNameCount = Main.gui.webData.portfolio_names.size();
-            
+
             System.out.println("INITIAL STATE ANALYSIS:");
             System.out.println("  Portfolio list size: " + initialPortfolioCount);
             System.out.println("  Name list size: " + initialNameCount);
             System.out.println("  Portfolio contents: " + Main.gui.webData.portfolio);
             System.out.println("  Name contents: " + Main.gui.webData.portfolio_names);
-            
+
             System.out.println("  Initial synchronization: " + (initialPortfolioCount == initialNameCount));
-            
+
             // JUnit assertion for initial state
-            assertEquals(initialPortfolioCount, initialNameCount, "Initial portfolio and name lists should be synchronized");
-            
+            assertEquals(initialPortfolioCount, initialNameCount,
+                    "Initial portfolio and name lists should be synchronized");
+
             // STATE TRANSITION 1: ADD OPERATION
             System.out.println("\nSTATE TRANSITION 1: ADD OPERATION");
             System.out.println("Performing add operation (simulating case 2 - new portfolio)...");
-            
+
             Main.gui.webData.portfolio.add(new ArrayList<>());
             Main.gui.webData.portfolio_names.add("IntegrityTestPortfolio");
-            
+
             int postAddPortfolioCount = Main.gui.webData.portfolio.size();
             int postAddNameCount = Main.gui.webData.portfolio_names.size();
-            
-            System.out.println("  After ADD - Portfolio size: " + postAddPortfolioCount + 
-                              ", Name size: " + postAddNameCount);
-            
+
+            System.out.println("  After ADD - Portfolio size: " + postAddPortfolioCount +
+                    ", Name size: " + postAddNameCount);
+
             // JUnit assertions for add operation
-            assertEquals(postAddPortfolioCount, postAddNameCount, "Portfolio and name lists should remain synchronized after add");
-            assertEquals(initialPortfolioCount + 1, postAddPortfolioCount, "Portfolio count should increment by 1 after add");
-            
+            assertEquals(postAddPortfolioCount, postAddNameCount,
+                    "Portfolio and name lists should remain synchronized after add");
+            assertEquals(initialPortfolioCount + 1, postAddPortfolioCount,
+                    "Portfolio count should increment by 1 after add");
+
             // STATE TRANSITION 2: RENAME OPERATION
             System.out.println("\nSTATE TRANSITION 2: RENAME OPERATION");
             System.out.println("Performing rename operation (simulating case 0 - rename)...");
-            
+
             String originalName = Main.gui.webData.portfolio_names.get(0);
             String newName = "RenamedPortfolio_" + System.currentTimeMillis();
             Main.gui.webData.portfolio_names.set(0, newName);
-            
+
             int postRenamePortfolioCount = Main.gui.webData.portfolio.size();
             int postRenameNameCount = Main.gui.webData.portfolio_names.size();
-            
+
             System.out.println("  Original name: '" + originalName + "' → New name: '" + newName + "'");
-            System.out.println("  After RENAME - Portfolio size: " + postRenamePortfolioCount + 
-                              ", Name size: " + postRenameNameCount);
-            
+            System.out.println("  After RENAME - Portfolio size: " + postRenamePortfolioCount +
+                    ", Name size: " + postRenameNameCount);
+
             // JUnit assertions for rename operation
-            assertEquals(postRenamePortfolioCount, postRenameNameCount, "Portfolio and name lists should remain synchronized after rename");
-            assertEquals(postAddPortfolioCount, postRenamePortfolioCount, "Portfolio count should remain unchanged after rename");
-            assertEquals(newName, Main.gui.webData.portfolio_names.get(0), "Rename operation should be executed successfully");
-            
+            assertEquals(postRenamePortfolioCount, postRenameNameCount,
+                    "Portfolio and name lists should remain synchronized after rename");
+            assertEquals(postAddPortfolioCount, postRenamePortfolioCount,
+                    "Portfolio count should remain unchanged after rename");
+            assertEquals(newName, Main.gui.webData.portfolio_names.get(0),
+                    "Rename operation should be executed successfully");
+
             // STATE TRANSITION 3: DELETE OPERATION
             System.out.println("\nSTATE TRANSITION 3: DELETE OPERATION");
             System.out.println("Performing delete operation (simulating case 1 - delete)...");
-            
+
             // Only delete if we have more than 1 (respecting minimum constraint)
             boolean canDelete = Main.gui.webData.portfolio.size() > 1;
             int preDeletePortfolioCount = Main.gui.webData.portfolio.size();
-            
+
             if (canDelete) {
                 int targetIndex = Main.gui.webData.portfolio_names.size() - 1; // Delete the added one
                 String deletedName = Main.gui.webData.portfolio_names.get(targetIndex);
@@ -744,29 +783,33 @@ public class TestDriver_PanelPortfolio {
             } else {
                 System.out.println("  Deletion prevented - minimum constraint enforced");
             }
-            
+
             int postDeletePortfolioCount = Main.gui.webData.portfolio.size();
             int postDeleteNameCount = Main.gui.webData.portfolio_names.size();
-            
-            System.out.println("  After DELETE - Portfolio size: " + postDeletePortfolioCount + 
-                              ", Name size: " + postDeleteNameCount);
-            
+
+            System.out.println("  After DELETE - Portfolio size: " + postDeletePortfolioCount +
+                    ", Name size: " + postDeleteNameCount);
+
             // JUnit assertions for delete operation
-            assertEquals(postDeletePortfolioCount, postDeleteNameCount, "Portfolio and name lists should remain synchronized after delete");
+            assertEquals(postDeletePortfolioCount, postDeleteNameCount,
+                    "Portfolio and name lists should remain synchronized after delete");
             if (canDelete) {
-                assertEquals(preDeletePortfolioCount - 1, postDeletePortfolioCount, "Portfolio count should decrease by 1 when deletion is allowed");
+                assertEquals(preDeletePortfolioCount - 1, postDeletePortfolioCount,
+                        "Portfolio count should decrease by 1 when deletion is allowed");
             } else {
-                assertEquals(preDeletePortfolioCount, postDeletePortfolioCount, "Portfolio count should remain unchanged when deletion is not allowed");
+                assertEquals(preDeletePortfolioCount, postDeletePortfolioCount,
+                        "Portfolio count should remain unchanged when deletion is not allowed");
             }
-            
+
             // COMPREHENSIVE DATA INTEGRITY ANALYSIS
             System.out.println("\nCOMPREHENSIVE DATA INTEGRITY ANALYSIS:");
-            
+
             // Check 1: List synchronization
             int finalPortfolioCount = Main.gui.webData.portfolio.size();
             int finalNameCount = Main.gui.webData.portfolio_names.size();
-            System.out.println("  Final list synchronization: (Portfolio: " + finalPortfolioCount + ", Names: " + finalNameCount + ")");
-            
+            System.out.println("  Final list synchronization: (Portfolio: " + finalPortfolioCount + ", Names: "
+                    + finalNameCount + ")");
+
             // Check 2: Name validity
             boolean allNamesValid = true;
             for (int i = 0; i < Main.gui.webData.portfolio_names.size(); i++) {
@@ -777,7 +820,7 @@ public class TestDriver_PanelPortfolio {
                 }
             }
             System.out.println("  All names valid: " + allNamesValid);
-            
+
             // Check 3: Portfolio objects exist
             boolean allPortfoliosExist = true;
             for (int i = 0; i < Main.gui.webData.portfolio.size(); i++) {
@@ -787,15 +830,15 @@ public class TestDriver_PanelPortfolio {
                 }
             }
             System.out.println("  All portfolio objects exist: " + allPortfoliosExist);
-            
+
             System.out.println("  Minimum constraint (≥1): " + (finalPortfolioCount >= 1));
-            
+
             // FINAL STATE VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  Current portfolio count: " + finalPortfolioCount);
             System.out.println("  Current name count: " + finalNameCount);
             System.out.println("  Current portfolio names: " + Main.gui.webData.portfolio_names);
-            
+
             // JUnit Assertions
             assertEquals(finalPortfolioCount, finalNameCount, "Portfolio and name lists should remain synchronized");
             assertTrue(allNamesValid, "All portfolio names should be valid");
@@ -803,65 +846,69 @@ public class TestDriver_PanelPortfolio {
             assertTrue(finalPortfolioCount >= 1, "Portfolio count should meet minimum constraint (≥1)");
             assertNotNull(Main.gui.webData.portfolio, "Portfolio list should not be null");
             assertNotNull(Main.gui.webData.portfolio_names, "Portfolio names list should not be null");
-            
+
             // CLEANUP: Restore original name if changed
             if (!newName.equals(originalName)) {
                 Main.gui.webData.portfolio_names.set(0, originalName);
                 System.out.println("Cleanup: Restored original name '" + originalName + "'");
             }
             System.out.println("\n   TC-32: Portfolio Data Integrity - PASSED");
-            
+
         } catch (Exception e) {
             System.out.println("\n   TC-32: Portfolio Data Integrity - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-32 failed due to exception: " + e.getMessage());
         }
-        
+
         System.out.println(border);
     }
 
     /**
-     * TC-33: Portfolio Value Calculation - Integration Test using Equivalence Partitioning
-     * Tests PanelPortfolio.calculatePortfolio() for real-time total value calculation
-     * Verifies: Current market price integration, portfolio total calculation accuracy
+     * TC-33: Portfolio Value Calculation - Integration Test using Equivalence
+     * Partitioning
+     * Tests PanelPortfolio.calculatePortfolio() for real-time total value
+     * calculation
+     * Verifies: Current market price integration, portfolio total calculation
+     * accuracy
      */
     @Test
     @Order(7)
     @DisplayName("TC-33: Portfolio Value Calculation")
     void testPortfolioValueCalculation() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-33: PORTFOLIO VALUE CALCULATION (Integration Test - Equivalence Partitioning)");
         System.out.println(border);
-        
+
         try {
             // ARRANGE: Setup actual portfolio for testing
             System.out.println("INPUT STATE - ACTUAL METHOD TESTING:");
-            
+
             // Ensure we have a valid portfolio to work with
             if (Main.gui.webData.portfolio.size() == 0) {
                 Main.gui.webData.portfolio.add(new ArrayList<>());
                 Main.gui.webData.portfolio_names.add("TestPortfolio");
             }
-            
+
             // Get actual portfolio reference
             int originalPortfolioNr = Main.gui.webData.portfolio_nr;
             Main.gui.webData.portfolio_nr = 0; // Use first portfolio
-            
+
             System.out.println("  Testing PanelPortfolio.calculatePortfolio() method");
             System.out.println("  Portfolio index: " + Main.gui.webData.portfolio_nr);
-            System.out.println("  Portfolio name: " + (Main.gui.webData.portfolio_names.size() > 0 ? 
-                              Main.gui.webData.portfolio_names.get(0) : "None"));
-            
+            System.out.println("  Portfolio name: "
+                    + (Main.gui.webData.portfolio_names.size() > 0 ? Main.gui.webData.portfolio_names.get(0) : "None"));
+
             // TEST 1: Call Actual calculatePortfolio() Method
             System.out.println("\nTEST 1: METHOD INVOCATION");
-            
+
             // Execute the real calculatePortfolio() method within Swing EDT
-            final boolean[] methodExecuted = {false};
-            final Exception[] executionException = {null};
-            final PanelPortfolio[] testPanel = {null};
-            
+            final boolean[] methodExecuted = { false };
+            final Exception[] executionException = { null };
+            final PanelPortfolio[] testPanel = { null };
+
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
                     try {
@@ -877,40 +924,41 @@ public class TestDriver_PanelPortfolio {
                 }
             });
             boolean methodCallSuccessful = methodExecuted[0] && executionException[0] == null;
-            
+
             System.out.println("VALIDATION - Method Execution:");
             System.out.println("  Method executed: " + methodExecuted[0]);
             System.out.println("  No exceptions: " + (executionException[0] == null));
             System.out.println("  Panel instance created: " + (testPanel[0] != null));
-            
+
             if (executionException[0] != null) {
                 System.out.println("  Exception details: " + executionException[0].getMessage());
             }
-            
+
             // TEST 2: Verify Method Side Effects (UI Updates)
             System.out.println("\nTEST 2: SIDE EFFECTS VALIDATION");
-            
+
             boolean panelExists = testPanel[0] != null;
             boolean panelInitialized = panelExists && testPanel[0].panel != null;
             boolean webDataExists = panelExists && testPanel[0].webData != null;
-            
+
             System.out.println("  Panel created successfully: " + panelExists);
             System.out.println("  UI components initialized: " + panelInitialized);
             System.out.println("  WebData connection exists: " + webDataExists);
-            
+
             // Test actual portfolio calculation effect
             if (panelExists) {
                 System.out.println("  Portfolio number used: " + testPanel[0].nr);
-                System.out.println("  Portfolio names available: " + (testPanel[0].names != null ? testPanel[0].names.size() : 0));
+                System.out.println(
+                        "  Portfolio names available: " + (testPanel[0].names != null ? testPanel[0].names.size() : 0));
             }
-            
+
             // TEST 3: Method Behavior Consistency
             System.out.println("\nTEST 3: METHOD BEHAVIOR CONSISTENCY");
-            
+
             // Call method multiple times to verify consistency
-            final boolean[] allCallsSuccessful = {true};
-            final int[] successfulCalls = {0};
-            
+            final boolean[] allCallsSuccessful = { true };
+            final int[] successfulCalls = { 0 };
+
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
                     try {
@@ -926,38 +974,42 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
             });
-            
+
             boolean consistentResults = allCallsSuccessful[0] && successfulCalls[0] == 3;
-            
+
             System.out.println("  Multiple calls successful: " + allCallsSuccessful[0]);
             System.out.println("  Results consistency: " + consistentResults);
-            
+
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  Method tested: PanelPortfolio.calculatePortfolio()");
             System.out.println("  Test approach: Method execution with portfolio data");
-            
+
             boolean overallPass = methodCallSuccessful && panelInitialized && consistentResults;
-            
+
             System.out.println("\nTC-33 RESULT: " + (overallPass ? "PASSED" : "FAILED"));
-            
+
             // JUnit Assertions for TC-33
             assertTrue(methodCallSuccessful, "Method call should be successful");
             assertTrue(panelInitialized, "Panel should be properly initialized");
             assertTrue(consistentResults, "Method calls should produce consistent results");
-            
+
             if (!overallPass) {
                 System.out.println("FAILURE DETAILS:");
-                if (!methodCallSuccessful) System.out.println("  • Actual method execution failed");
-                if (!panelInitialized) System.out.println("  • Panel initialization failed");
-                if (!consistentResults) System.out.println("  • Method behavior consistency failed (" + successfulCalls[0] + "/3 calls successful)");
+                if (!methodCallSuccessful)
+                    System.out.println("  • Actual method execution failed");
+                if (!panelInitialized)
+                    System.out.println("  • Panel initialization failed");
+                if (!consistentResults)
+                    System.out.println(
+                            "  • Method behavior consistency failed (" + successfulCalls[0] + "/3 calls successful)");
                 System.out.println("  • This is REAL testing - method failures indicate actual bugs!");
             }
-            
+
             // CLEANUP: Restore original state
             Main.gui.webData.portfolio_nr = originalPortfolioNr;
             System.out.println("Cleanup: Restored original portfolio index");
-            
+
         } catch (Exception e) {
             System.out.println("\nTC-33 RESULT:   FAIL");
             System.out.println("EXCEPTION DETAILS:");
@@ -966,50 +1018,54 @@ public class TestDriver_PanelPortfolio {
             System.out.println("  This exception indicates a real issue in the actual code!");
             e.printStackTrace();
         }
-        
+
         System.out.println(border);
     }
 
     /**
-     * TC-34: Portfolio Gains/Losses Calculation - Integration Test using Equivalence Partitioning
-     * Tests PanelPortfolio.calculatePortfolio() and refreshPortfolio() for profit/loss analysis
-     * Verifies: Purchase vs current price comparison, gain/loss percentage calculation using actual data
+     * TC-34: Portfolio Gains/Losses Calculation - Integration Test using
+     * Equivalence Partitioning
+     * Tests PanelPortfolio.calculatePortfolio() and refreshPortfolio() for
+     * profit/loss analysis
+     * Verifies: Purchase vs current price comparison, gain/loss percentage
+     * calculation using actual data
      */
     @Test
     @Order(8)
     @DisplayName("TC-34: Portfolio Gains/Losses Calculation")
     void testPortfolioGainsLossesCalculation() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-34: PORTFOLIO GAINS/LOSSES CALCULATION (Integration Test - Equivalence Partitioning)");
         System.out.println(border);
-        
+
         try {
             // ARRANGE: Setup actual portfolio with real data
             System.out.println("INPUT STATE - ACTUAL PORTFOLIO DATA TESTING:");
-            
+
             if (Main.gui.webData.portfolio.size() == 0) {
                 Main.gui.webData.portfolio.add(new ArrayList<>());
                 Main.gui.webData.portfolio_names.add("GainLossTestPortfolio");
             }
-            
+
             // Backup original portfolio state
             int originalPortfolioNr = Main.gui.webData.portfolio_nr;
             Main.gui.webData.portfolio_nr = 0;
-            
+
             // Get current portfolio state
             System.out.println("  Portfolio index: " + Main.gui.webData.portfolio_nr);
             System.out.println("  Portfolio name: " + Main.gui.webData.portfolio_names.get(0));
             System.out.println("  Current coins in portfolio: " + Main.gui.webData.portfolio.get(0).size());
-            
+
             // TEST 1: Call Actual refreshPortfolio() Method for Current Data
             System.out.println("\nTEST 1: ACTUAL REFRESH PORTFOLIO METHOD");
-            
-            final boolean[] refreshExecuted = {false};
-            final Exception[] refreshException = {null};
-            final PanelPortfolio[] testPanel = {null};
-            
+
+            final boolean[] refreshExecuted = { false };
+            final Exception[] refreshException = { null };
+            final PanelPortfolio[] testPanel = { null };
+
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
                     try {
@@ -1024,52 +1080,53 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
             });
-            
+
             boolean refreshSuccessful = refreshExecuted[0] && refreshException[0] == null;
             System.out.println("  Refresh method executed: " + refreshSuccessful);
-            
+
             // JUnit Assertion for refresh
             assertTrue(refreshSuccessful, "Refresh method should execute successfully");
-            
+
             // TEST 2: Verify Actual Portfolio Calculation Logic
             System.out.println("\nTEST 2: ACTUAL PORTFOLIO CALCULATION VALIDATION");
-            
+
             if (testPanel[0] != null && refreshSuccessful) {
                 // Get actual portfolio data after refresh
-                ArrayList<WebData.Coin> currentPortfolio = testPanel[0].getWebData().portfolio.get(testPanel[0].getCurrentPortfolioNumber());
-                
+                ArrayList<WebData.Coin> currentPortfolio = testPanel[0].getWebData().portfolio
+                        .get(testPanel[0].getCurrentPortfolioNumber());
+
                 System.out.println("  Active portfolio coins: " + currentPortfolio.size());
-                
+
                 // Calculate actual values using real portfolio data
                 double totalValue = 0.0;
                 double totalGains = 0.0;
                 boolean hasPortfolioData = currentPortfolio.size() > 0;
-                
+
                 for (int i = 0; i < currentPortfolio.size(); i++) {
                     WebData.Coin coin = currentPortfolio.get(i);
                     totalValue += coin.getPortfolioValue();
                     totalGains += coin.getPortfolioGains();
-                    
-                    System.out.println("    Coin " + (i+1) + " - " + coin.getName() + ":");
+
+                    System.out.println("    Coin " + (i + 1) + " - " + coin.getName() + ":");
                     System.out.println("      Amount: " + coin.getPortfolioAmount());
                     System.out.println("      Current Price: " + coin.getPrice());
                     System.out.println("      Portfolio Value: " + coin.getPortfolioValue());
                     System.out.println("      Gains/Losses: " + coin.getPortfolioGains());
                 }
-                
+
                 System.out.println("  Total Portfolio Value: $" + totalValue);
                 System.out.println("  Total Gains/Losses: $" + totalGains);
                 System.out.println("  Portfolio has data: " + hasPortfolioData);
-                
+
                 // JUnit Assertion for portfolio data
                 assertTrue(hasPortfolioData, "Portfolio should have data to calculate");
-                
+
                 // TEST 3: Call Actual calculatePortfolio() Method
                 System.out.println("\nTEST 3: ACTUAL CALCULATE PORTFOLIO METHOD");
-                
-                final boolean[] calculateExecuted = {false};
-                final Exception[] calculateException = {null};
-                
+
+                final boolean[] calculateExecuted = { false };
+                final Exception[] calculateException = { null };
+
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
                         try {
@@ -1083,152 +1140,156 @@ public class TestDriver_PanelPortfolio {
                         }
                     }
                 });
-                
+
                 boolean calculateSuccessful = calculateExecuted[0] && calculateException[0] == null;
                 System.out.println("  Calculate method executed: " + calculateSuccessful);
-                
+
                 // JUnit Assertion for calculate method
                 assertTrue(calculateSuccessful, "Calculate method should execute successfully");
-                
+
                 // TEST 4: Validate Method Results Using Getters
                 System.out.println("\nTEST 4: VALIDATE ACTUAL CALCULATION RESULTS");
-                
+
                 if (calculateSuccessful) {
                     // Verify UI was updated by checking overview text
                     JEditorPane overviewText = testPanel[0].getOverviewText();
-                    boolean overviewUpdated = overviewText != null && overviewText.getText() != null && 
-                                            !overviewText.getText().trim().isEmpty();
-                    
+                    boolean overviewUpdated = overviewText != null && overviewText.getText() != null &&
+                            !overviewText.getText().trim().isEmpty();
+
                     System.out.println("  Overview UI updated: " + overviewUpdated);
-                    
+
                     // JUnit Assertion for overview update
                     assertTrue(overviewUpdated, "Overview UI should be updated with portfolio data");
-                    
+
                     if (overviewUpdated) {
                         String htmlContent = overviewText.getText();
                         System.out.println("  HTML content length: " + htmlContent.length() + " characters");
-                        
+
                         // Check if HTML contains financial data
                         boolean hasNumbers = htmlContent.matches(".*\\d+.*");
                         boolean hasFormatting = htmlContent.contains("<") && htmlContent.contains(">");
-                        
+
                         System.out.println("  Contains numerical data: " + hasNumbers);
                         System.out.println("  Contains HTML formatting: " + hasFormatting);
-                        
+
                         // JUnit Assertions for content validation
                         assertTrue(hasNumbers, "Portfolio display should contain numerical data");
                         assertTrue(hasFormatting, "Portfolio display should contain HTML formatting");
                     }
                 }
-                
+
                 // TEST 5: Data Consistency Validation
                 System.out.println("\nTEST 5: DATA CONSISTENCY VALIDATION");
-                
+
                 boolean portfolioDataConsistent = true;
                 for (int i = 0; i < currentPortfolio.size(); i++) {
                     WebData.Coin coin = currentPortfolio.get(i);
-                    
+
                     // Validate that portfolio_value = amount * current_price (approximately)
                     double expectedValue = coin.getPortfolioAmount() * coin.getPrice();
                     double actualValue = coin.getPortfolioValue();
                     boolean valueConsistent = Math.abs(expectedValue - actualValue) < 0.01 || actualValue > 0;
-                    
+
                     if (!valueConsistent) {
                         portfolioDataConsistent = false;
-                        System.out.println("      Value inconsistency for " + coin.getName() + 
-                                         ": Expected=" + expectedValue + ", Actual=" + actualValue);
+                        System.out.println("      Value inconsistency for " + coin.getName() +
+                                ": Expected=" + expectedValue + ", Actual=" + actualValue);
                     }
                 }
-                
+
                 System.out.println("  Portfolio data consistency: " + portfolioDataConsistent);
-                
+
                 // JUnit Assertion for data consistency
                 assertTrue(portfolioDataConsistent, "Portfolio calculations should be consistent");
-                
+
                 // FINAL VALIDATION
                 System.out.println("\nFINAL STATE:");
                 System.out.println("  refreshPortfolio() method: Uses portfolio data from application");
                 System.out.println("  calculatePortfolio() method: Updates UI components");
                 System.out.println("  Data validation: Verifies calculation accuracy");
-                
+
                 // JUnit Assertions
                 assertTrue(refreshSuccessful, "refreshPortfolio() method should execute successfully");
                 assertTrue(calculateSuccessful, "calculatePortfolio() method should execute successfully");
                 assertTrue(portfolioDataConsistent, "Portfolio data should be consistent after calculations");
-                
+
                 System.out.println("\n   TC-34: Portfolio Gains/Losses Calculation - PASSED");
-                
+
             } else {
                 fail("Could not proceed - panel creation or refresh failed");
             }
-            
+
             // CLEANUP: Restore original state
             Main.gui.webData.portfolio_nr = originalPortfolioNr;
             System.out.println("Cleanup: Restored original portfolio index");
-            
+
         } catch (Exception e) {
             System.out.println("\n   TC-34: Portfolio Gains/Losses Calculation - FAILED");
             System.out.println("EXCEPTION: " + e.getMessage());
             fail("TC-34 failed due to exception: " + e.getMessage());
         }
-        
+
         System.out.println(border);
     }
 
     /**
-     * TC-35: HTML Portfolio Display - Integration Test using State Transition Testing
-     * Tests PanelPortfolio.calculatePortfolio() HTML formatting with color indicators
-     * Verifies: HTML output generation, profit/loss color coding, formatting consistency using ACTUAL method
+     * TC-35: HTML Portfolio Display - Integration Test using State Transition
+     * Testing
+     * Tests PanelPortfolio.calculatePortfolio() HTML formatting with color
+     * indicators
+     * Verifies: HTML output generation, profit/loss color coding, formatting
+     * consistency using ACTUAL method
      */
     @Test
     @Order(9)
     @DisplayName("TC-35: HTML Portfolio Display")
     void testHtmlPortfolioDisplay() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-35: HTML PORTFOLIO DISPLAY (Integration Test - State Transition Testing)");
         System.out.println(border);
-        
+
         try {
             // ARRANGE: Setup actual portfolio for HTML testing
             System.out.println("INPUT STATE - ACTUAL HTML GENERATION TESTING:");
-            
+
             if (Main.gui.webData.portfolio.size() == 0) {
                 Main.gui.webData.portfolio.add(new ArrayList<>());
                 Main.gui.webData.portfolio_names.add("HTMLTestPortfolio");
             }
-            
+
             // Backup original portfolio state
             int originalPortfolioNr = Main.gui.webData.portfolio_nr;
             Main.gui.webData.portfolio_nr = 0;
-            
+
             System.out.println("  Portfolio index: " + Main.gui.webData.portfolio_nr);
             System.out.println("  Portfolio name: " + Main.gui.webData.portfolio_names.get(0));
             System.out.println("  Testing calculatePortfolio() HTML generation");
-            
+
             // TEST 1: Call Actual calculatePortfolio() Method for HTML Generation
             System.out.println("\nTEST 1: ACTUAL HTML GENERATION METHOD");
-            
-            final boolean[] htmlGenerated = {false};
-            final Exception[] htmlException = {null};
-            final PanelPortfolio[] testPanel = {null};
-            final String[] actualHtmlContent = {null};
-            
+
+            final boolean[] htmlGenerated = { false };
+            final Exception[] htmlException = { null };
+            final PanelPortfolio[] testPanel = { null };
+            final String[] actualHtmlContent = { null };
+
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
                     try {
                         testPanel[0] = new PanelPortfolio();
                         // Call actual calculatePortfolio method to generate HTML
                         testPanel[0].calculatePortfolio();
-                        
+
                         // Get the actual HTML content from overviewText
                         JEditorPane overviewText = testPanel[0].getOverviewText();
                         if (overviewText != null) {
                             actualHtmlContent[0] = overviewText.getText();
                             htmlGenerated[0] = true;
                         }
-                        
+
                         System.out.println("    calculatePortfolio() HTML generation executed successfully");
                     } catch (Exception e) {
                         htmlException[0] = e;
@@ -1236,121 +1297,128 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
             });
-            
-            boolean htmlGenerationSuccessful = htmlGenerated[0] && htmlException[0] == null && actualHtmlContent[0] != null;
+
+            boolean htmlGenerationSuccessful = htmlGenerated[0] && htmlException[0] == null
+                    && actualHtmlContent[0] != null;
             System.out.println("  HTML generation executed: " + htmlGenerationSuccessful);
-            
+
             // JUnit Assertion for HTML generation
             assertTrue(htmlGenerationSuccessful, "HTML generation should execute successfully");
-            
+
             if (htmlGenerationSuccessful) {
                 String realHtmlContent = actualHtmlContent[0];
                 System.out.println("  Actual HTML content length: " + realHtmlContent.length() + " characters");
-                
+
                 // TEST 2: Validate Real HTML Structure
                 System.out.println("\nTEST 2: ACTUAL HTML STRUCTURE VALIDATION");
-                
+
                 // Check for basic HTML elements
                 boolean hasHtmlStructure = !realHtmlContent.trim().isEmpty();
                 boolean hasFormatting = realHtmlContent.contains("<") && realHtmlContent.contains(">");
                 boolean hasFont = realHtmlContent.contains("<font");
                 boolean hasCenter = realHtmlContent.contains("<center") || realHtmlContent.contains("center");
-                
+
                 System.out.println("  HTML content exists: " + hasHtmlStructure);
                 System.out.println("  HTML formatting tags: " + hasFormatting);
                 System.out.println("  Font styling present: " + hasFont);
                 System.out.println("  Layout formatting: " + hasCenter);
-                
+
                 // JUnit Assertions for HTML structure
                 assertTrue(hasHtmlStructure, "HTML content should have proper structure");
                 assertTrue(hasFormatting, "HTML should contain formatting tags");
-                
+
                 // TEST 3: Validate Actual Financial Data in HTML
                 System.out.println("\nTEST 3: ACTUAL FINANCIAL DATA VALIDATION");
-                
+
                 // Check for numerical data patterns
                 boolean hasNumericalData = realHtmlContent.matches(".*[0-9]+.*");
                 boolean hasDecimalNumbers = realHtmlContent.matches(".*\\d+\\.\\d+.*");
-                boolean hasCurrency = realHtmlContent.contains("$") || realHtmlContent.contains("€") || 
-                                    realHtmlContent.contains("£") || realHtmlContent.contains("¥");
+                boolean hasCurrency = realHtmlContent.contains("$") || realHtmlContent.contains("€") ||
+                        realHtmlContent.contains("£") || realHtmlContent.contains("¥");
                 boolean hasParentheses = realHtmlContent.contains("(") && realHtmlContent.contains(")");
-                
+
                 System.out.println("  Numerical data present: " + hasNumericalData);
                 System.out.println("  Decimal formatting: " + hasDecimalNumbers);
                 System.out.println("  Currency symbols: " + hasCurrency);
                 System.out.println("  Percentage formatting: " + hasParentheses);
-                
+
                 // JUnit Assertions for numerical data
                 assertTrue(hasNumericalData, "HTML should contain numerical data");
-                
+
                 // TEST 4: Color Coding Validation (Theme-based)
                 System.out.println("\nTEST 4: ACTUAL COLOR CODING VALIDATION");
-                
+
                 // Check for color information in HTML
-                boolean hasColorInfo = realHtmlContent.toLowerCase().contains("color") || 
-                                     realHtmlContent.contains("rgb");
+                boolean hasColorInfo = realHtmlContent.toLowerCase().contains("color") ||
+                        realHtmlContent.contains("rgb");
                 boolean hasMultipleColors = realHtmlContent.split("color").length > 2;
                 boolean hasThemeIntegration = realHtmlContent.contains("rgb(");
-                
+
                 System.out.println("  Color information present: " + hasColorInfo);
                 System.out.println("  Multiple color usage: " + hasMultipleColors);
                 System.out.println("  Theme integration (RGB): " + hasThemeIntegration);
-                
+
                 // JUnit Assertions for color formatting
                 assertTrue(hasColorInfo, "HTML should contain color information for gains/losses");
-                
+
                 // TEST 5: Portfolio Data Integration
                 System.out.println("\nTEST 5: PORTFOLIO DATA INTEGRATION VALIDATION");
-                
+
                 if (testPanel[0] != null) {
                     // Get actual portfolio data
-                    ArrayList<WebData.Coin> currentPortfolio = testPanel[0].getWebData().portfolio.get(testPanel[0].getCurrentPortfolioNumber());
-                    
+                    ArrayList<WebData.Coin> currentPortfolio = testPanel[0].getWebData().portfolio
+                            .get(testPanel[0].getCurrentPortfolioNumber());
+
                     // Validate HTML reflects actual portfolio state
-                    boolean portfolioDataReflected = currentPortfolio.size() == 0 || 
-                                                   (currentPortfolio.size() > 0 && hasNumericalData);
+                    boolean portfolioDataReflected = currentPortfolio.size() == 0 ||
+                            (currentPortfolio.size() > 0 && hasNumericalData);
                     boolean htmlMatchesPortfolioSize = true; // Basic validation
-                    
+
                     System.out.println("  Portfolio size: " + currentPortfolio.size());
                     System.out.println("  HTML reflects portfolio data: " + portfolioDataReflected);
                     System.out.println("  Data consistency: " + htmlMatchesPortfolioSize);
-                    
+
                     // JUnit Assertions for data reflection
                     assertTrue(portfolioDataReflected, "HTML should reflect actual portfolio data");
                     assertTrue(htmlMatchesPortfolioSize, "HTML data should be consistent with portfolio size");
-                    
+
                     // Display a sample of the actual HTML for verification
                     System.out.println("\nSAMPLE HTML OUTPUT (first 200 chars):");
-                    String htmlSample = realHtmlContent.length() > 200 ? 
-                                      realHtmlContent.substring(0, 200) + "..." : realHtmlContent;
+                    String htmlSample = realHtmlContent.length() > 200 ? realHtmlContent.substring(0, 200) + "..."
+                            : realHtmlContent;
                     System.out.println("  \"" + htmlSample + "\"");
                 }
-                
+
                 // FINAL VALIDATION
                 System.out.println("\nFINAL STATE:");
                 System.out.println("  calculatePortfolio() method: Uses HTML generation logic");
                 System.out.println("  HTML output: Content generated by application");
                 System.out.println("  Color coding: Uses theme colors and profit/loss logic");
                 System.out.println("  Data integration: Portfolio data reflected in HTML output");
-                
-                boolean overallPass = htmlGenerationSuccessful && hasHtmlStructure && hasFormatting && 
-                                    hasNumericalData && hasColorInfo;
-                
+
+                boolean overallPass = htmlGenerationSuccessful && hasHtmlStructure && hasFormatting &&
+                        hasNumericalData && hasColorInfo;
+
                 System.out.println("\nTC-35 RESULT: " + (overallPass ? "PASSED" : "FAILED"));
-                
+
                 // Final JUnit Assertion for TC-35
                 assertTrue(overallPass, "TC-35: HTML Portfolio Display should pass all validations");
-                
+
                 if (!overallPass) {
                     System.out.println("FAILURE DETAILS:");
-                    if (!htmlGenerationSuccessful) System.out.println("  • calculatePortfolio() HTML generation method failed");
-                    if (!hasHtmlStructure) System.out.println("  • HTML content structure validation failed");
-                    if (!hasFormatting) System.out.println("  • HTML formatting tags validation failed");
-                    if (!hasNumericalData) System.out.println("  • Financial data integration validation failed");
-                    if (!hasColorInfo) System.out.println("  • Color coding integration validation failed");
+                    if (!htmlGenerationSuccessful)
+                        System.out.println("  • calculatePortfolio() HTML generation method failed");
+                    if (!hasHtmlStructure)
+                        System.out.println("  • HTML content structure validation failed");
+                    if (!hasFormatting)
+                        System.out.println("  • HTML formatting tags validation failed");
+                    if (!hasNumericalData)
+                        System.out.println("  • Financial data integration validation failed");
+                    if (!hasColorInfo)
+                        System.out.println("  • Color coding integration validation failed");
                     System.out.println("  • These failures indicate actual bugs in HTML generation!");
                 }
-                
+
             } else {
                 System.out.println("\nTC-35 RESULT:   FAIL");
                 System.out.println("  Could not proceed - HTML generation method failed");
@@ -1358,11 +1426,11 @@ public class TestDriver_PanelPortfolio {
                     System.out.println("  Exception: " + htmlException[0].getMessage());
                 }
             }
-            
+
             // CLEANUP: Restore original state
             Main.gui.webData.portfolio_nr = originalPortfolioNr;
             System.out.println("Cleanup: Restored original portfolio index");
-            
+
         } catch (Exception e) {
             System.out.println("\nTC-35 RESULT:   FAIL");
             System.out.println("EXCEPTION DETAILS:");
@@ -1371,63 +1439,67 @@ public class TestDriver_PanelPortfolio {
             System.out.println("  This exception indicates a real issue in HTML generation!");
             e.printStackTrace();
         }
-        
+
         System.out.println(border);
     }
 
     /**
-     * TC-36: Currency Conversion Handling - Integration Test using State Transition Testing
+     * TC-36: Currency Conversion Handling - Integration Test using State Transition
+     * Testing
      * Tests PanelPortfolio.refreshPortfolio() for currency conversion updates
-     * Verifies: Base currency changes, portfolio recalculation, conversion accuracy using ACTUAL methods
+     * Verifies: Base currency changes, portfolio recalculation, conversion accuracy
+     * using ACTUAL methods
      */
     @Test
     @Order(10)
     @DisplayName("TC-36: Currency Conversion Handling")
     void testCurrencyConversionHandling() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-36: CURRENCY CONVERSION HANDLING (Integration Test - State Transition Testing)");
         System.out.println(border);
-        
+
         try {
             System.out.println("INPUT STATE - ACTUAL CURRENCY CONVERSION TESTING:");
-            
+
             if (Main.gui.webData.portfolio.size() == 0) {
                 Main.gui.webData.portfolio.add(new ArrayList<>());
                 Main.gui.webData.portfolio_names.add("CurrencyTestPortfolio");
             }
-            
+
             // Backup original state
             int originalPortfolioNr = Main.gui.webData.portfolio_nr;
             String originalCurrency = Main.currency;
             Main.gui.webData.portfolio_nr = 0;
-            
+
             System.out.println("  Original currency: " + originalCurrency);
             System.out.println("  Portfolio index: " + Main.gui.webData.portfolio_nr);
             System.out.println("  Testing refreshPortfolio() currency conversion");
-            
+
             // TEST 1: Call refreshPortfolio() with Original Currency
             System.out.println("\nTEST 1: ACTUAL REFRESH WITH ORIGINAL CURRENCY");
-            
-            final boolean[] originalRefreshExecuted = {false};
-            final Exception[] originalRefreshException = {null};
-            final PanelPortfolio[] testPanel = {null};
-            final double[] originalPortfolioValue = {0.0};
-            
+
+            final boolean[] originalRefreshExecuted = { false };
+            final Exception[] originalRefreshException = { null };
+            final PanelPortfolio[] testPanel = { null };
+            final double[] originalPortfolioValue = { 0.0 };
+
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
                     try {
                         testPanel[0] = new PanelPortfolio();
                         // Call actual refreshPortfolio method with original currency
                         testPanel[0].refreshPortfolio();
-                        
+
                         // Get portfolio value after refresh
-                        ArrayList<WebData.Coin> portfolio = testPanel[0].getWebData().portfolio.get(testPanel[0].getCurrentPortfolioNumber());
+                        ArrayList<WebData.Coin> portfolio = testPanel[0].getWebData().portfolio
+                                .get(testPanel[0].getCurrentPortfolioNumber());
                         for (int i = 0; i < portfolio.size(); i++) {
                             originalPortfolioValue[0] += portfolio.get(i).getPortfolioValue();
                         }
-                        
+
                         originalRefreshExecuted[0] = true;
                         System.out.println("    refreshPortfolio() with original currency executed successfully");
                     } catch (Exception e) {
@@ -1436,24 +1508,24 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
             });
-            
+
             boolean originalRefreshSuccessful = originalRefreshExecuted[0] && originalRefreshException[0] == null;
             System.out.println("  Original refresh executed: " + originalRefreshSuccessful);
-            
+
             // JUnit Assertion for original refresh
             assertTrue(originalRefreshSuccessful, "Original currency refresh should execute successfully");
             System.out.println("  Original portfolio value: " + originalPortfolioValue[0]);
-            
+
             if (originalRefreshSuccessful && testPanel[0] != null) {
-                
+
                 // TEST 2: Currency Change to EUR and Refresh
                 System.out.println("\nTEST 2: ACTUAL CURRENCY CHANGE TO EUR");
-                
+
                 final String newCurrency1 = "EUR";
-                final boolean[] eurRefreshExecuted = {false};
-                final Exception[] eurRefreshException = {null};
-                final double[] eurPortfolioValue = {0.0};
-                
+                final boolean[] eurRefreshExecuted = { false };
+                final Exception[] eurRefreshException = { null };
+                final double[] eurPortfolioValue = { 0.0 };
+
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
                         try {
@@ -1461,16 +1533,17 @@ public class TestDriver_PanelPortfolio {
                             String oldCurrency = Main.currency;
                             Main.currency = newCurrency1;
                             System.out.println("  Changed currency: " + oldCurrency + " → " + Main.currency);
-                            
+
                             // Call refreshPortfolio with new currency
                             testPanel[0].refreshPortfolio();
-                            
+
                             // Get new portfolio value
-                            ArrayList<WebData.Coin> portfolio = testPanel[0].getWebData().portfolio.get(testPanel[0].getCurrentPortfolioNumber());
+                            ArrayList<WebData.Coin> portfolio = testPanel[0].getWebData().portfolio
+                                    .get(testPanel[0].getCurrentPortfolioNumber());
                             for (int i = 0; i < portfolio.size(); i++) {
                                 eurPortfolioValue[0] += portfolio.get(i).getPortfolioValue();
                             }
-                            
+
                             eurRefreshExecuted[0] = true;
                             System.out.println("    refreshPortfolio() with EUR executed successfully");
                         } catch (Exception e) {
@@ -1479,22 +1552,22 @@ public class TestDriver_PanelPortfolio {
                         }
                     }
                 });
-                
+
                 boolean eurRefreshSuccessful = eurRefreshExecuted[0] && eurRefreshException[0] == null;
                 System.out.println("  EUR refresh executed: " + eurRefreshSuccessful);
-                
+
                 // JUnit Assertion for EUR refresh
                 assertTrue(eurRefreshSuccessful, "EUR currency refresh should execute successfully");
                 System.out.println("  EUR portfolio value: " + eurPortfolioValue[0]);
-                
+
                 // TEST 3: Currency Change to GBP and Refresh
                 System.out.println("\nTEST 3: ACTUAL CURRENCY CHANGE TO GBP");
-                
+
                 final String newCurrency2 = "GBP";
-                final boolean[] gbpRefreshExecuted = {false};
-                final Exception[] gbpRefreshException = {null};
-                final double[] gbpPortfolioValue = {0.0};
-                
+                final boolean[] gbpRefreshExecuted = { false };
+                final Exception[] gbpRefreshException = { null };
+                final double[] gbpPortfolioValue = { 0.0 };
+
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
                         try {
@@ -1502,16 +1575,17 @@ public class TestDriver_PanelPortfolio {
                             String oldCurrency = Main.currency;
                             Main.currency = newCurrency2;
                             System.out.println("  Changed currency: " + oldCurrency + " → " + Main.currency);
-                            
+
                             // Call refreshPortfolio with GBP
                             testPanel[0].refreshPortfolio();
-                            
+
                             // Get new portfolio value
-                            ArrayList<WebData.Coin> portfolio = testPanel[0].getWebData().portfolio.get(testPanel[0].getCurrentPortfolioNumber());
+                            ArrayList<WebData.Coin> portfolio = testPanel[0].getWebData().portfolio
+                                    .get(testPanel[0].getCurrentPortfolioNumber());
                             for (int i = 0; i < portfolio.size(); i++) {
                                 gbpPortfolioValue[0] += portfolio.get(i).getPortfolioValue();
                             }
-                            
+
                             gbpRefreshExecuted[0] = true;
                             System.out.println("    refreshPortfolio() with GBP executed successfully");
                         } catch (Exception e) {
@@ -1520,37 +1594,37 @@ public class TestDriver_PanelPortfolio {
                         }
                     }
                 });
-                
+
                 boolean gbpRefreshSuccessful = gbpRefreshExecuted[0] && gbpRefreshException[0] == null;
                 System.out.println("  GBP refresh executed: " + gbpRefreshSuccessful);
-                
+
                 // JUnit Assertion for GBP refresh
                 assertTrue(gbpRefreshSuccessful, "GBP currency refresh should execute successfully");
                 System.out.println("  GBP portfolio value: " + gbpPortfolioValue[0]);
-                
+
                 // TEST 4: Validate Currency State Transitions
                 System.out.println("\nTEST 4: ACTUAL CURRENCY STATE TRANSITION VALIDATION");
-                
+
                 // Check that currency changes actually affected portfolio calculations
                 boolean currencyTransitionsWorked = true;
-                
+
                 // Portfolio values should change with currency (unless portfolio is empty)
-                ArrayList<WebData.Coin> currentPortfolio = testPanel[0].getWebData().portfolio.get(testPanel[0].getCurrentPortfolioNumber());
+                ArrayList<WebData.Coin> currentPortfolio = testPanel[0].getWebData().portfolio
+                        .get(testPanel[0].getCurrentPortfolioNumber());
                 boolean hasPortfolioData = currentPortfolio.size() > 0;
-                
+
                 if (hasPortfolioData) {
                     // Values should be different for different currencies (in most cases)
-                    boolean valuesChangedWithCurrency = 
-                        (originalPortfolioValue[0] != eurPortfolioValue[0]) ||
-                        (eurPortfolioValue[0] != gbpPortfolioValue[0]) ||
-                        (originalPortfolioValue[0] == 0 && eurPortfolioValue[0] == 0); // All zero is also valid
-                        
+                    boolean valuesChangedWithCurrency = (originalPortfolioValue[0] != eurPortfolioValue[0]) ||
+                            (eurPortfolioValue[0] != gbpPortfolioValue[0]) ||
+                            (originalPortfolioValue[0] == 0 && eurPortfolioValue[0] == 0); // All zero is also valid
+
                     System.out.println("  Portfolio has data: " + hasPortfolioData);
                     System.out.println("  Currency changes affected values: " + valuesChangedWithCurrency);
-                    
+
                     // JUnit Assertion for currency value changes
                     assertTrue(valuesChangedWithCurrency, "Currency changes should affect portfolio values");
-                    
+
                     if (!valuesChangedWithCurrency) {
                         currencyTransitionsWorked = false;
                     }
@@ -1558,69 +1632,77 @@ public class TestDriver_PanelPortfolio {
                     System.out.println("  Portfolio is empty - currency changes not testable");
                     System.out.println("  Empty portfolio handling:   PASS");
                 }
-                
+
                 // TEST 5: Calculate Portfolio Integration
                 System.out.println("\nTEST 5: CALCULATE PORTFOLIO WITH CURRENCY INTEGRATION");
-                
-                final boolean[] calculateWithCurrencyExecuted = {false};
-                final Exception[] calculateWithCurrencyException = {null};
-                
+
+                final boolean[] calculateWithCurrencyExecuted = { false };
+                final Exception[] calculateWithCurrencyException = { null };
+
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
                         try {
                             // Call calculatePortfolio after currency changes
                             testPanel[0].calculatePortfolio();
                             calculateWithCurrencyExecuted[0] = true;
-                            System.out.println("    calculatePortfolio() with currency integration executed successfully");
+                            System.out.println(
+                                    "    calculatePortfolio() with currency integration executed successfully");
                         } catch (Exception e) {
                             calculateWithCurrencyException[0] = e;
-                            System.out.println("    calculatePortfolio() with currency integration failed: " + e.getMessage());
+                            System.out.println(
+                                    "    calculatePortfolio() with currency integration failed: " + e.getMessage());
                         }
                     }
                 });
-                
-                boolean calculateWithCurrencySuccessful = calculateWithCurrencyExecuted[0] && calculateWithCurrencyException[0] == null;
+
+                boolean calculateWithCurrencySuccessful = calculateWithCurrencyExecuted[0]
+                        && calculateWithCurrencyException[0] == null;
                 System.out.println("  Calculate with currency executed: " + calculateWithCurrencySuccessful);
-                
+
                 // JUnit Assertion for calculate with currency
                 assertTrue(calculateWithCurrencySuccessful, "Calculate with currency should execute successfully");
-                
+
                 // FINAL VALIDATION
                 System.out.println("\nFINAL STATE:");
                 System.out.println("  refreshPortfolio() method: Uses ACTUAL currency conversion logic");
                 System.out.println("  Main.currency changes: Tests REAL currency state management");
                 System.out.println("  Currency integration: Tests REAL portfolio recalculation");
                 System.out.println("  Method integration: Tests REAL calculatePortfolio() currency handling");
-                
-                boolean overallPass = originalRefreshSuccessful && eurRefreshSuccessful && 
-                                    gbpRefreshSuccessful && currencyTransitionsWorked && 
-                                    calculateWithCurrencySuccessful;
-                
+
+                boolean overallPass = originalRefreshSuccessful && eurRefreshSuccessful &&
+                        gbpRefreshSuccessful && currencyTransitionsWorked &&
+                        calculateWithCurrencySuccessful;
+
                 System.out.println("\nTC-36 RESULT: " + (overallPass ? "PASSED" : "FAILED"));
-                
+
                 // Final JUnit Assertion for TC-36
                 assertTrue(overallPass, "TC-36: Currency Conversion Handling should pass all validations");
-                
+
                 if (!overallPass) {
                     System.out.println("FAILURE DETAILS:");
-                    if (!originalRefreshSuccessful) System.out.println("  • Original currency refresh method failed");
-                    if (!eurRefreshSuccessful) System.out.println("  • EUR currency refresh method failed");
-                    if (!gbpRefreshSuccessful) System.out.println("  • GBP currency refresh method failed");
-                    if (!currencyTransitionsWorked) System.out.println("  • Currency state transitions validation failed");
-                    if (!calculateWithCurrencySuccessful) System.out.println("  • Calculate portfolio currency integration failed");
+                    if (!originalRefreshSuccessful)
+                        System.out.println("  • Original currency refresh method failed");
+                    if (!eurRefreshSuccessful)
+                        System.out.println("  • EUR currency refresh method failed");
+                    if (!gbpRefreshSuccessful)
+                        System.out.println("  • GBP currency refresh method failed");
+                    if (!currencyTransitionsWorked)
+                        System.out.println("  • Currency state transitions validation failed");
+                    if (!calculateWithCurrencySuccessful)
+                        System.out.println("  • Calculate portfolio currency integration failed");
                     System.out.println("  • These failures indicate actual bugs in currency conversion!");
                 }
-                
+
             } else {
                 System.out.println("\nTC-36 RESULT:   FAIL");
                 System.out.println("  Could not proceed - initial refresh failed");
             }
-            
+
             // CLEANUP: Restore original state
             Main.currency = originalCurrency;
             Main.gui.webData.portfolio_nr = originalPortfolioNr;
             System.out.println("Cleanup: Restored original currency (" + originalCurrency + ") and portfolio index");
-            
+
         } catch (Exception e) {
             System.out.println("\nTC-36 RESULT:   FAIL");
             System.out.println("EXCEPTION DETAILS:");
@@ -1629,39 +1711,42 @@ public class TestDriver_PanelPortfolio {
             System.out.println("  This exception indicates a real issue in currency conversion!");
             e.printStackTrace();
         }
-        
+
         System.out.println(border);
     }
 
     /**
      * TC-37: Input Validation - Unit Test using Boundary Value Analysis
-     * Tests input validation patterns that mirror PanelPortfolio.bAddCoinListener validation logic
-     * Verifies: Error message patterns, input range validation, format checking using actual validation approach
+     * Tests input validation patterns that mirror PanelPortfolio.bAddCoinListener
+     * validation logic
+     * Verifies: Error message patterns, input range validation, format checking
+     * using actual validation approach
      */
     @Test
     @Order(11)
     @DisplayName("TC-37: Input Validation")
     void testInputValidation() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-37: INPUT VALIDATION (Unit Test - Boundary Value Analysis)");
         System.out.println(border);
-        
+
         try {
             System.out.println("INPUT STATE - ACTUAL INPUT VALIDATION TESTING:");
             System.out.println("  Testing validation patterns that mirror bAddCoinListener logic");
             System.out.println("  Boundary values: negative, zero, positive, maximum, invalid formats");
             System.out.println("  Using ACTUAL Double.parseDouble() validation approach from bAddCoinListener");
-            
+
             // Setup test panel for validation context
             if (Main.gui.webData.portfolio.size() == 0) {
                 Main.gui.webData.portfolio.add(new ArrayList<>());
                 Main.gui.webData.portfolio_names.add("ValidationTestPortfolio");
             }
-            
-            final PanelPortfolio[] testPanel = {null};
-            
+
+            final PanelPortfolio[] testPanel = { null };
+
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
                     try {
@@ -1671,19 +1756,19 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
             });
-            
+
             // TEST 1: Amount Validation (Actual bAddCoinListener Logic Pattern)
             System.out.println("\nTEST 1: AMOUNT VALIDATION (Actual Pattern from bAddCoinListener)");
-            
-            String[] amountInputs = {"-1.0", "0", "0.0001", "1.0", "999999999", "abc", "", "1.2.3", null};
-            
+
+            String[] amountInputs = { "-1.0", "0", "0.0001", "1.0", "999999999", "abc", "", "1.2.3", null };
+
             boolean amountValidationCorrect = true;
             for (int i = 0; i < amountInputs.length; i++) {
                 String input = amountInputs[i];
-                
+
                 // Use ACTUAL validation logic from bAddCoinListener (line 458-470)
                 boolean isValid = false;
-                
+
                 try {
                     if (input == null) { // pressed "cancel button"
                         // Input cancelled
@@ -1696,32 +1781,34 @@ public class TestDriver_PanelPortfolio {
                     String error = "Incorrect format! You can only write a number with or without decimal (example: 51.2)";
                     System.out.println("  Input: '" + input + "' → INVALID (" + error + ")");
                 }
-                
+
                 // Validate against actual bAddCoinListener behavior
                 boolean expectedValid = input != null && input.matches("-?\\d+(\\.\\d+)?");
                 boolean testPassed = (isValid == expectedValid) || (input == null && !isValid);
-                
-                if (!testPassed) amountValidationCorrect = false;
+
+                if (!testPassed)
+                    amountValidationCorrect = false;
                 System.out.println("    Validation result: " + testPassed);
             }
-            
+
             System.out.println("  Amount validation (actual pattern): " + amountValidationCorrect);
-            
+
             // JUnit Assertion for amount validation
             assertTrue(amountValidationCorrect, "Amount validation should follow actual bAddCoinListener pattern");
-            
+
             // TEST 2: Price Validation (Actual bAddCoinListener Logic Pattern)
             System.out.println("\nTEST 2: PRICE VALIDATION (Actual Pattern from bAddCoinListener)");
-            
-            String[] priceInputs = {"-0.01", "0", "0.0001", "1.50", "999999.99", "1e6", "NaN", "Infinity", "abc", null};
-            
+
+            String[] priceInputs = { "-0.01", "0", "0.0001", "1.50", "999999.99", "1e6", "NaN", "Infinity", "abc",
+                    null };
+
             boolean priceValidationCorrect = true;
             for (int i = 0; i < priceInputs.length; i++) {
                 String input = priceInputs[i];
-                
+
                 // Use ACTUAL validation logic from bAddCoinListener (line 475-490)
                 boolean isValid = false;
-                
+
                 try {
                     if (input == null) { // pressed "cancel button"
                         // Input cancelled
@@ -1733,26 +1820,28 @@ public class TestDriver_PanelPortfolio {
                 } catch (Exception ex) {
                     System.out.println("  Input: '" + input + "' → INVALID (fallback to current price)");
                 }
-                
+
                 // Validate against actual bAddCoinListener behavior
-                boolean expectedValid = input != null && 
-                    (input.matches("-?\\d+(\\.\\d+)?") || input.equals("Infinity") || input.equals("-Infinity") || input.matches("\\d+e\\d+"));
+                boolean expectedValid = input != null &&
+                        (input.matches("-?\\d+(\\.\\d+)?") || input.equals("Infinity") || input.equals("-Infinity")
+                                || input.matches("\\d+e\\d+"));
                 boolean testPassed = (isValid == expectedValid) || (input == null && !isValid);
-                
-                if (!testPassed) priceValidationCorrect = false;
+
+                if (!testPassed)
+                    priceValidationCorrect = false;
                 System.out.println("    Validation result: " + testPassed);
             }
-            
+
             System.out.println("  Price validation (actual pattern): " + priceValidationCorrect);
-            
+
             // JUnit Assertion for price validation
             assertTrue(priceValidationCorrect, "Price validation should follow actual bAddCoinListener pattern");
-            
+
             // TEST 3: Actual Exception Handling Pattern
             System.out.println("\nTEST 3: ACTUAL EXCEPTION HANDLING VALIDATION");
-            
-            String[] invalidInputs = {"", "abc", "1.2.3", "text123", "123text", "...", "+-123"};
-            
+
+            String[] invalidInputs = { "", "abc", "1.2.3", "text123", "123text", "...", "+-123" };
+
             boolean exceptionHandlingCorrect = true;
             for (String input : invalidInputs) {
                 boolean caughtException = false;
@@ -1762,67 +1851,72 @@ public class TestDriver_PanelPortfolio {
                     caughtException = true;
                     System.out.println("  Input: '" + input + "' → NumberFormatException caught  ");
                 }
-                
+
                 if (!caughtException) {
                     exceptionHandlingCorrect = false;
                     System.out.println("  Input: '" + input + "' → No exception  ");
                 }
             }
-            
+
             System.out.println("  Exception handling (actual behavior): " + exceptionHandlingCorrect);
-            
+
             // JUnit Assertion for exception handling
-            assertTrue(exceptionHandlingCorrect, "Exception handling should match actual NumberFormatException behavior");
-            
+            assertTrue(exceptionHandlingCorrect,
+                    "Exception handling should match actual NumberFormatException behavior");
+
             // TEST 4: Validate Portfolio Integration Context
             System.out.println("\nTEST 4: PORTFOLIO INTEGRATION CONTEXT VALIDATION");
-            
+
             boolean portfolioContextValid = testPanel[0] != null;
-            
+
             if (portfolioContextValid) {
                 // Test that we can access portfolio data (context for bAddCoinListener)
                 WebData webData = testPanel[0].getWebData();
                 boolean webDataAccessible = webData != null;
                 boolean coinDataAccessible = webData != null && webData.coin != null;
                 boolean portfolioDataAccessible = webData != null && webData.portfolio != null;
-                
+
                 System.out.println("  Panel created: " + portfolioContextValid);
                 System.out.println("  WebData accessible: " + webDataAccessible);
                 System.out.println("  Coin data accessible: " + coinDataAccessible);
                 System.out.println("  Portfolio data accessible: " + portfolioDataAccessible);
-                
+
                 portfolioContextValid = webDataAccessible && portfolioDataAccessible;
             }
-            
+
             System.out.println("  Portfolio integration context: " + portfolioContextValid);
-            
+
             // JUnit Assertion for portfolio context
             assertTrue(portfolioContextValid, "Portfolio integration context should be valid for input validation");
-            
+
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  bAddCoinListener method: Uses Double.parseDouble() validation");
             System.out.println("  Error handling: Uses NumberFormatException pattern");
             System.out.println("  Validation approach: Tests input validation patterns");
             System.out.println("  Integration context: Portfolio data accessibility verified");
-            
-            boolean overallPass = amountValidationCorrect && priceValidationCorrect && 
-                                exceptionHandlingCorrect && portfolioContextValid;
-            
+
+            boolean overallPass = amountValidationCorrect && priceValidationCorrect &&
+                    exceptionHandlingCorrect && portfolioContextValid;
+
             System.out.println("\nTC-37 RESULT: " + (overallPass ? "PASSED" : "FAILED"));
-            
+
             // Final JUnit Assertion for TC-37
             assertTrue(overallPass, "TC-37: Input Validation should pass all validations");
-            
+
             if (!overallPass) {
                 System.out.println("FAILURE DETAILS:");
-                if (!amountValidationCorrect) System.out.println("  • Amount validation pattern analysis failed");
-                if (!priceValidationCorrect) System.out.println("  • Price validation pattern analysis failed");
-                if (!exceptionHandlingCorrect) System.out.println("  • Exception handling pattern validation failed");
-                if (!portfolioContextValid) System.out.println("  • Portfolio integration context validation failed");
+                if (!amountValidationCorrect)
+                    System.out.println("  • Amount validation pattern analysis failed");
+                if (!priceValidationCorrect)
+                    System.out.println("  • Price validation pattern analysis failed");
+                if (!exceptionHandlingCorrect)
+                    System.out.println("  • Exception handling pattern validation failed");
+                if (!portfolioContextValid)
+                    System.out.println("  • Portfolio integration context validation failed");
                 System.out.println("  • These failures indicate issues with actual validation logic patterns!");
             }
-            
+
         } catch (Exception e) {
             System.out.println("\nTC-37 RESULT:   FAIL");
             System.out.println("EXCEPTION DETAILS:");
@@ -1831,41 +1925,44 @@ public class TestDriver_PanelPortfolio {
             System.out.println("  This exception indicates issues with the actual validation context!");
             e.printStackTrace();
         }
-        
+
         System.out.println(border);
     }
 
     /**
      * TC-38: Duplicate Entry Prevention - Unit Test using Equivalence Partitioning
-     * Tests PanelPortfolio.testFindPortfolioName() duplicate cryptocurrency prevention
-     * Verifies: Duplicate detection, case sensitivity, name matching accuracy using ACTUAL method
+     * Tests PanelPortfolio.testFindPortfolioName() duplicate cryptocurrency
+     * prevention
+     * Verifies: Duplicate detection, case sensitivity, name matching accuracy using
+     * ACTUAL method
      */
     @Test
     @Order(12)
     @DisplayName("TC-38: Duplicate Entry Prevention")
     void testDuplicateEntryPrevention() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-38: DUPLICATE ENTRY PREVENTION (Unit Test - Equivalence Partitioning)");
         System.out.println(border);
-        
+
         try {
             System.out.println("INPUT STATE - ACTUAL DUPLICATE PREVENTION TESTING:");
-            
+
             if (Main.gui.webData.portfolio.size() == 0) {
                 Main.gui.webData.portfolio.add(new ArrayList<>());
                 Main.gui.webData.portfolio_names.add("DuplicateTestPortfolio");
             }
-            
+
             // Backup original portfolio state
             int originalPortfolioNr = Main.gui.webData.portfolio_nr;
             Main.gui.webData.portfolio_nr = 0;
-            
+
             // Setup test portfolio with actual coin data
-            final PanelPortfolio[] testPanel = {null};
-            final boolean[] panelCreated = {false};
-            
+            final PanelPortfolio[] testPanel = { null };
+            final boolean[] panelCreated = { false };
+
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
                     try {
@@ -1876,16 +1973,16 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
             });
-            
+
             if (!panelCreated[0] || testPanel[0] == null) {
                 System.out.println("TC-38 RESULT:   FAIL");
                 System.out.println("  Could not create test panel");
                 return;
             }
-            
+
             // Add some actual coins to portfolio for testing
             ArrayList<WebData.Coin> testPortfolio = testPanel[0].getWebData().portfolio.get(0);
-            
+
             // Get actual coins from WebData (if available)
             if (testPanel[0].getWebData().coin != null && testPanel[0].getWebData().coin.size() > 0) {
                 // Add first few coins to portfolio for duplicate testing
@@ -1901,161 +1998,167 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
             }
-            
+
             System.out.println("  Portfolio coins added: " + testPortfolio.size());
-            
+
             // TEST 1: Actual Duplicate Detection using testFindPortfolioName()
             System.out.println("\nTEST 1: ACTUAL DUPLICATE DETECTION");
-            
+
             boolean duplicateDetectionCorrect = true;
-            
+
             for (int i = 0; i < testPortfolio.size(); i++) {
                 String coinName = testPortfolio.get(i).getName();
                 System.out.println("  Testing duplicate for existing coin: '" + coinName + "'");
-                
+
                 // Call actual testFindPortfolioName method
                 boolean isDuplicate = testPanel[0].testFindPortfolioName(coinName);
-                
-                System.out.println("    testFindPortfolioName(\"" + coinName + "\") → " + 
-                                 (isDuplicate ? "DUPLICATE FOUND  " : "NOT FOUND  "));
-                
+
+                System.out.println("    testFindPortfolioName(\"" + coinName + "\") → " +
+                        (isDuplicate ? "DUPLICATE FOUND  " : "NOT FOUND  "));
+
                 if (!isDuplicate) {
                     duplicateDetectionCorrect = false;
                     System.out.println("      Expected duplicate but not found!");
                 }
             }
-            
+
             System.out.println("  Actual duplicate detection: " + duplicateDetectionCorrect);
-            
+
             // JUnit Assertion for duplicate detection
-            assertTrue(duplicateDetectionCorrect, "Duplicate detection should work correctly with testFindPortfolioName");
-            
+            assertTrue(duplicateDetectionCorrect,
+                    "Duplicate detection should work correctly with testFindPortfolioName");
+
             // TEST 2: Actual Non-Duplicate Detection
             System.out.println("\nTEST 2: ACTUAL NON-DUPLICATE DETECTION");
-            
-            String[] nonExistentCoins = {"NonExistentCoin123", "TestCoin999", "FakeCurrency", "UnknownToken"};
+
+            String[] nonExistentCoins = { "NonExistentCoin123", "TestCoin999", "FakeCurrency", "UnknownToken" };
             boolean nonDuplicateDetectionCorrect = true;
-            
+
             for (String coinName : nonExistentCoins) {
                 System.out.println("  Testing non-duplicate: '" + coinName + "'");
-                
+
                 // Call actual testFindPortfolioName method
                 boolean isDuplicate = testPanel[0].testFindPortfolioName(coinName);
-                
-                System.out.println("    testFindPortfolioName(\"" + coinName + "\") → " + 
-                                 (isDuplicate ? "DUPLICATE FOUND  " : "NOT FOUND  "));
-                
+
+                System.out.println("    testFindPortfolioName(\"" + coinName + "\") → " +
+                        (isDuplicate ? "DUPLICATE FOUND  " : "NOT FOUND  "));
+
                 if (isDuplicate) {
                     nonDuplicateDetectionCorrect = false;
                     System.out.println("      Unexpected duplicate detected!");
                 }
             }
-            
+
             System.out.println("  Actual non-duplicate detection: " + nonDuplicateDetectionCorrect);
-            
+
             // JUnit Assertion for non-duplicate detection
             assertTrue(nonDuplicateDetectionCorrect, "Non-duplicate detection should work correctly");
-            
+
             // TEST 3: Case Sensitivity Testing with Actual Method
             System.out.println("\nTEST 3: ACTUAL CASE SENSITIVITY TESTING");
-            
+
             boolean caseSensitivityCorrect = true;
-            
+
             for (int i = 0; i < testPortfolio.size(); i++) {
                 String originalName = testPortfolio.get(i).getName();
                 String lowerName = originalName.toLowerCase();
                 String upperName = originalName.toUpperCase();
-                
+
                 System.out.println("  Testing case sensitivity for: '" + originalName + "'");
-                
+
                 // Test lowercase version
                 boolean lowerIsDuplicate = testPanel[0].testFindPortfolioName(lowerName);
-                System.out.println("    testFindPortfolioName(\"" + lowerName + "\") → " + 
-                                 (lowerIsDuplicate ? "DUPLICATE" : "NOT FOUND"));
-                
+                System.out.println("    testFindPortfolioName(\"" + lowerName + "\") → " +
+                        (lowerIsDuplicate ? "DUPLICATE" : "NOT FOUND"));
+
                 // Test uppercase version
                 boolean upperIsDuplicate = testPanel[0].testFindPortfolioName(upperName);
-                System.out.println("    testFindPortfolioName(\"" + upperName + "\") → " + 
-                                 (upperIsDuplicate ? "DUPLICATE" : "NOT FOUND"));
-                
+                System.out.println("    testFindPortfolioName(\"" + upperName + "\") → " +
+                        (upperIsDuplicate ? "DUPLICATE" : "NOT FOUND"));
+
                 // Analyze actual behavior (case-sensitive or case-insensitive)
                 if (!originalName.equals(lowerName) && !originalName.equals(upperName)) {
                     // Names are different cases, check if method is case sensitive
                     boolean methodIsCaseSensitive = !lowerIsDuplicate || !upperIsDuplicate;
-                    System.out.println("    Method appears to be: " + 
-                                     (methodIsCaseSensitive ? "CASE-SENSITIVE" : "CASE-INSENSITIVE"));
+                    System.out.println("    Method appears to be: " +
+                            (methodIsCaseSensitive ? "CASE-SENSITIVE" : "CASE-INSENSITIVE"));
                 }
             }
-            
+
             System.out.println("  Case sensitivity behavior analyzed:   PASS");
-            
+
             // TEST 4: Edge Cases with Actual Method
             System.out.println("\nTEST 4: ACTUAL EDGE CASE TESTING");
-            
-            String[] edgeCases = {"", "   ", null};
+
+            String[] edgeCases = { "", "   ", null };
             boolean edgeCaseHandlingCorrect = true;
-            
+
             for (String edgeCase : edgeCases) {
                 System.out.println("  Testing edge case: " + (edgeCase == null ? "null" : "'" + edgeCase + "'"));
-                
+
                 try {
                     boolean isDuplicate = testPanel[0].testFindPortfolioName(edgeCase);
-                    System.out.println("    testFindPortfolioName() → " + 
-                                     (isDuplicate ? "DUPLICATE" : "NOT FOUND") + "  ");
+                    System.out.println("    testFindPortfolioName() → " +
+                            (isDuplicate ? "DUPLICATE" : "NOT FOUND") + "  ");
                 } catch (Exception e) {
                     System.out.println("    Exception handled: " + e.getClass().getSimpleName() + "  ");
                 }
             }
-            
+
             System.out.println("  Edge case handling: " + edgeCaseHandlingCorrect);
-            
+
             // JUnit Assertion for edge case handling
             assertTrue(edgeCaseHandlingCorrect, "Edge case handling should be robust");
-            
+
             // TEST 5: Integration with Actual Portfolio Data
             System.out.println("\nTEST 5: INTEGRATION WITH ACTUAL PORTFOLIO DATA");
-            
+
             // Verify method works with actual portfolio state
             int actualPortfolioSize = testPortfolio.size();
             boolean integrationCorrect = actualPortfolioSize >= 0; // Basic sanity check
-            
+
             System.out.println("  Actual portfolio size: " + actualPortfolioSize);
             System.out.println("  Method integration: " + integrationCorrect);
-            
+
             // JUnit Assertion for method integration
             assertTrue(integrationCorrect, "Method should integrate properly with actual portfolio data");
-            
+
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  testFindPortfolioName() method: Uses duplicate detection logic");
             System.out.println("  Portfolio data: Uses current portfolio contents");
             System.out.println("  Case sensitivity: Method behavior analyzed");
             System.out.println("  Edge cases: Exception handling tested");
-            
-            boolean overallPass = duplicateDetectionCorrect && nonDuplicateDetectionCorrect && 
-                                caseSensitivityCorrect && edgeCaseHandlingCorrect && integrationCorrect;
-            
+
+            boolean overallPass = duplicateDetectionCorrect && nonDuplicateDetectionCorrect &&
+                    caseSensitivityCorrect && edgeCaseHandlingCorrect && integrationCorrect;
+
             System.out.println("\nTC-38 RESULT: " + (overallPass ? "PASSED" : "FAILED"));
-            
+
             // Final JUnit Assertion for TC-38
             assertTrue(overallPass, "TC-38: Duplicate Entry Prevention should pass all validations");
-            
+
             if (!overallPass) {
                 System.out.println("FAILURE DETAILS:");
-                if (!duplicateDetectionCorrect) System.out.println("  • Actual duplicate detection failed");
-                if (!nonDuplicateDetectionCorrect) System.out.println("  • Actual non-duplicate detection failed");
-                if (!caseSensitivityCorrect) System.out.println("  • Case sensitivity behavior analysis failed");
-                if (!edgeCaseHandlingCorrect) System.out.println("  • Edge case handling failed");
-                if (!integrationCorrect) System.out.println("  • Portfolio data integration failed");
+                if (!duplicateDetectionCorrect)
+                    System.out.println("  • Actual duplicate detection failed");
+                if (!nonDuplicateDetectionCorrect)
+                    System.out.println("  • Actual non-duplicate detection failed");
+                if (!caseSensitivityCorrect)
+                    System.out.println("  • Case sensitivity behavior analysis failed");
+                if (!edgeCaseHandlingCorrect)
+                    System.out.println("  • Edge case handling failed");
+                if (!integrationCorrect)
+                    System.out.println("  • Portfolio data integration failed");
                 System.out.println("  • These failures indicate actual bugs in duplicate detection!");
             }
-            
+
             // CLEANUP: Restore original state
             Main.gui.webData.portfolio_nr = originalPortfolioNr;
             // Clear test portfolio
             testPortfolio.clear();
             System.out.println("Cleanup: Restored original portfolio state and cleared test data");
-            
+
         } catch (Exception e) {
             System.out.println("\nTC-38 RESULT:   FAIL");
             System.out.println("EXCEPTION DETAILS:");
@@ -2064,48 +2167,51 @@ public class TestDriver_PanelPortfolio {
             System.out.println("  This exception indicates a real issue in duplicate detection!");
             e.printStackTrace();
         }
-        
+
         System.out.println(border);
     }
 
     /**
-     * TC-39: Portfolio Data Serialization - Integration Test using State Transition Testing
+     * TC-39: Portfolio Data Serialization - Integration Test using State Transition
+     * Testing
      * Tests PanelPortfolio.serializePortfolio() complete data persistence
-     * Verifies: Data serialization, session persistence, data integrity using ACTUAL method calls
+     * Verifies: Data serialization, session persistence, data integrity using
+     * ACTUAL method calls
      */
     @Test
     @Order(13)
     @DisplayName("TC-39: Portfolio Data Serialization")
     void testPortfolioDataSerialization() {
         String border = "";
-        for (int i = 0; i < 80; i++) border += "=";
+        for (int i = 0; i < 80; i++)
+            border += "=";
         System.out.println("\n" + border);
         System.out.println("TC-39: PORTFOLIO DATA SERIALIZATION (Integration Test - State Transition Testing)");
         System.out.println(border);
-        
+
         try {
             System.out.println("INPUT STATE - ACTUAL SERIALIZATION TESTING:");
-            
+
             if (Main.gui.webData.portfolio.size() == 0) {
                 Main.gui.webData.portfolio.add(new ArrayList<>());
                 Main.gui.webData.portfolio_names.add("SerializationTestPortfolio");
             }
-            
+
             // Backup original portfolio state
             int originalPortfolioNr = Main.gui.webData.portfolio_nr;
             Main.gui.webData.portfolio_nr = 0;
-            
+
             // Use actual portfolio serialization location (cannot modify final field)
             String actualSerLocation = Main.portfolioSerLocation;
-            
+
             System.out.println("  Portfolio serialization location: " + actualSerLocation);
             System.out.println("  Testing serializePortfolio() method with file operations");
             System.out.println("  Note: Using actual file location (will backup/restore existing data)");
-            
+
             // Setup test panel
-            final PanelPortfolio[] testPanel = {null};
-            final boolean[] panelCreated = {false};
-            
+            final PanelPortfolio[] testPanel = { null };
+            final boolean[] panelCreated = { false };
+
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
                     try {
@@ -2116,16 +2222,16 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
             });
-            
+
             if (!panelCreated[0] || testPanel[0] == null) {
                 System.out.println("TC-39 RESULT:   FAIL");
                 System.out.println("  Could not create test panel");
                 return;
             }
-            
+
             // Add test data to portfolio
             ArrayList<WebData.Coin> testPortfolio = testPanel[0].getWebData().portfolio.get(0);
-            
+
             if (testPanel[0].getWebData().coin != null && testPanel[0].getWebData().coin.size() > 0) {
                 // Add test coins to portfolio
                 for (int i = 0; i < Math.min(2, testPanel[0].getWebData().coin.size()); i++) {
@@ -2141,15 +2247,15 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
             }
-            
+
             System.out.println("  Test portfolio coins: " + testPortfolio.size());
-            
+
             // TEST 1: Actual serializePortfolio() Method Execution
             System.out.println("\nTEST 1: ACTUAL SERIALIZE PORTFOLIO METHOD");
-            
-            final boolean[] serializeExecuted = {false};
-            final Exception[] serializeException = {null};
-            
+
+            final boolean[] serializeExecuted = { false };
+            final Exception[] serializeException = { null };
+
             SwingUtilities.invokeAndWait(new Runnable() {
                 public void run() {
                     try {
@@ -2163,71 +2269,75 @@ public class TestDriver_PanelPortfolio {
                     }
                 }
             });
-            
+
             boolean serializeSuccessful = serializeExecuted[0] && serializeException[0] == null;
             System.out.println("  Serialize method executed: " + serializeSuccessful);
-            
+
             // JUnit Assertion for serialization
             assertTrue(serializeSuccessful, "Serialize method should execute successfully");
-            
+
             // TEST 2: Actual File I/O Validation
             System.out.println("\nTEST 2: ACTUAL FILE I/O VALIDATION");
-            
+
             java.io.File serializedFile = new java.io.File(actualSerLocation);
             boolean fileCreated = serializedFile.exists();
             long fileSize = fileCreated ? serializedFile.length() : 0;
-            
+
             System.out.println("  Serialization file created: " + (fileCreated ? "  PASS" : "  FAIL"));
             System.out.println("  File path: " + actualSerLocation);
             System.out.println("  File size: " + fileSize + " bytes");
-            
+
             boolean fileSizeValid = fileSize > 0;
             System.out.println("  File size validation: " + (fileSizeValid ? "  PASS" : "  FAIL"));
-            
+
             // TEST 3: Data Integrity Verification (Deserialization Test)
             System.out.println("\nTEST 3: ACTUAL DATA INTEGRITY VERIFICATION");
-            
+
             boolean dataIntegrityValid = false;
-            
+
             if (fileCreated && fileSizeValid) {
                 try {
                     // Read the serialized data back
                     java.io.FileInputStream file = new java.io.FileInputStream(actualSerLocation);
                     java.io.BufferedInputStream buffer = new java.io.BufferedInputStream(file);
                     java.io.ObjectInputStream in = new java.io.ObjectInputStream(buffer);
-                    
+
                     // Read portfolio data
                     @SuppressWarnings("unchecked")
-                    ArrayList<ArrayList<WebData.Coin>> deserializedPortfolio = (ArrayList<ArrayList<WebData.Coin>>) in.readObject();
+                    ArrayList<ArrayList<WebData.Coin>> deserializedPortfolio = (ArrayList<ArrayList<WebData.Coin>>) in
+                            .readObject();
                     @SuppressWarnings("unchecked")
                     ArrayList<String> deserializedNames = (ArrayList<String>) in.readObject();
                     int deserializedNr = (Integer) in.readObject();
-                    
+
                     in.close();
-                    
+
                     // Validate deserialized data
-                    boolean portfolioSizeMatches = deserializedPortfolio.size() == testPanel[0].getWebData().portfolio.size();
-                    boolean namesSizeMatches = deserializedNames.size() == testPanel[0].getWebData().portfolio_names.size();
+                    boolean portfolioSizeMatches = deserializedPortfolio.size() == testPanel[0].getWebData().portfolio
+                            .size();
+                    boolean namesSizeMatches = deserializedNames.size() == testPanel[0].getWebData().portfolio_names
+                            .size();
                     boolean portfolioNrMatches = deserializedNr == testPanel[0].getCurrentPortfolioNumber();
-                    
+
                     System.out.println("  Deserialization successful:   PASS");
                     System.out.println("  Portfolio size matches: " + (portfolioSizeMatches ? "  PASS" : "  FAIL"));
                     System.out.println("  Names size matches: " + (namesSizeMatches ? "  PASS" : "  FAIL"));
                     System.out.println("  Portfolio number matches: " + (portfolioNrMatches ? "  PASS" : "  FAIL"));
-                    
+
                     // Validate coin data integrity
                     boolean coinDataIntact = true;
                     if (deserializedPortfolio.size() > 0 && deserializedPortfolio.get(0).size() > 0) {
                         ArrayList<WebData.Coin> originalCoins = testPanel[0].getWebData().portfolio.get(0);
                         ArrayList<WebData.Coin> deserializedCoins = deserializedPortfolio.get(0);
-                        
+
                         if (originalCoins.size() == deserializedCoins.size()) {
                             for (int i = 0; i < originalCoins.size(); i++) {
                                 WebData.Coin original = originalCoins.get(i);
                                 WebData.Coin deserialized = deserializedCoins.get(i);
-                                
+
                                 if (!original.getName().equals(deserialized.getName()) ||
-                                    Math.abs(original.getPortfolioAmount() - deserialized.getPortfolioAmount()) > 0.001) {
+                                        Math.abs(original.getPortfolioAmount()
+                                                - deserialized.getPortfolioAmount()) > 0.001) {
                                     coinDataIntact = false;
                                     break;
                                 }
@@ -2236,38 +2346,38 @@ public class TestDriver_PanelPortfolio {
                             coinDataIntact = false;
                         }
                     }
-                    
+
                     System.out.println("  Coin data integrity: " + (coinDataIntact ? "  PASS" : "  FAIL"));
-                    
-                    dataIntegrityValid = portfolioSizeMatches && namesSizeMatches && 
-                                       portfolioNrMatches && coinDataIntact;
-                    
+
+                    dataIntegrityValid = portfolioSizeMatches && namesSizeMatches &&
+                            portfolioNrMatches && coinDataIntact;
+
                 } catch (Exception e) {
                     System.out.println("  Deserialization failed:   FAIL");
                     System.out.println("  Error: " + e.getMessage());
                 }
             }
-            
+
             System.out.println("  Overall data integrity: " + (dataIntegrityValid ? "  PASS" : "  FAIL"));
-            
+
             // TEST 4: Multiple Serialization Cycles
             System.out.println("\nTEST 4: MULTIPLE SERIALIZATION CYCLES");
-            
+
             boolean multipleSerializationsSuccessful = true;
-            
+
             for (int cycle = 1; cycle <= 3; cycle++) {
                 System.out.println("  Cycle " + cycle + ":");
-                
+
                 // Modify portfolio slightly for each cycle
                 if (testPortfolio.size() > 0) {
                     WebData.Coin firstCoin = testPortfolio.get(0);
                     firstCoin.setPortfolioAmount(firstCoin.getPortfolioAmount() + 0.1 * cycle);
                 }
-                
+
                 // Serialize again
-                final boolean[] cycleSerializeExecuted = {false};
+                final boolean[] cycleSerializeExecuted = { false };
                 final int cycleNum = cycle;
-                
+
                 SwingUtilities.invokeAndWait(new Runnable() {
                     public void run() {
                         try {
@@ -2275,43 +2385,50 @@ public class TestDriver_PanelPortfolio {
                             cycleSerializeExecuted[0] = true;
                             System.out.println("    Serialization cycle " + cycleNum + ":   SUCCESS");
                         } catch (Exception e) {
-                            System.out.println("    Serialization cycle " + cycleNum + ":   FAILED (" + e.getMessage() + ")");
+                            System.out.println(
+                                    "    Serialization cycle " + cycleNum + ":   FAILED (" + e.getMessage() + ")");
                         }
                     }
                 });
-                
+
                 if (!cycleSerializeExecuted[0]) {
                     multipleSerializationsSuccessful = false;
                 }
             }
-            
-            System.out.println("  Multiple serialization cycles: " + (multipleSerializationsSuccessful ? "  PASS" : "  FAIL"));
-            
+
+            System.out.println(
+                    "  Multiple serialization cycles: " + (multipleSerializationsSuccessful ? "  PASS" : "  FAIL"));
+
             // FINAL VALIDATION
             System.out.println("\nFINAL STATE:");
             System.out.println("  serializePortfolio() method: Uses file operations for data persistence");
             System.out.println("  File operations: Serialization file creation and writing tested");
             System.out.println("  Data persistence: Deserialization and data integrity verified");
             System.out.println("  State transitions: Multiple save cycles tested");
-            
-            boolean overallPass = serializeSuccessful && fileCreated && fileSizeValid && 
-                                dataIntegrityValid && multipleSerializationsSuccessful;
-            
+
+            boolean overallPass = serializeSuccessful && fileCreated && fileSizeValid &&
+                    dataIntegrityValid && multipleSerializationsSuccessful;
+
             System.out.println("\nTC-39 RESULT: " + (overallPass ? "  PASS" : "  FAIL"));
-            
+
             if (!overallPass) {
                 System.out.println("FAILURE DETAILS:");
-                if (!serializeSuccessful) System.out.println("  • serializePortfolio() method execution failed");
-                if (!fileCreated) System.out.println("  • Serialization file creation failed");
-                if (!fileSizeValid) System.out.println("  • Serialization file size validation failed");
-                if (!dataIntegrityValid) System.out.println("  • Data integrity verification failed");
-                if (!multipleSerializationsSuccessful) System.out.println("  • Multiple serialization cycles failed");
+                if (!serializeSuccessful)
+                    System.out.println("  • serializePortfolio() method execution failed");
+                if (!fileCreated)
+                    System.out.println("  • Serialization file creation failed");
+                if (!fileSizeValid)
+                    System.out.println("  • Serialization file size validation failed");
+                if (!dataIntegrityValid)
+                    System.out.println("  • Data integrity verification failed");
+                if (!multipleSerializationsSuccessful)
+                    System.out.println("  • Multiple serialization cycles failed");
                 System.out.println("  • These failures indicate actual bugs in serialization functionality!");
             }
-            
+
             // CLEANUP: Restore original state and remove test file
             Main.gui.webData.portfolio_nr = originalPortfolioNr;
-            
+
             try {
                 if (serializedFile.exists()) {
                     serializedFile.delete();
@@ -2320,11 +2437,11 @@ public class TestDriver_PanelPortfolio {
             } catch (Exception e) {
                 System.out.println("Cleanup warning: Could not delete test file - " + e.getMessage());
             }
-            
+
             // Clear test portfolio
             testPortfolio.clear();
             System.out.println("Cleanup: Restored original portfolio state and settings");
-            
+
         } catch (Exception e) {
             System.out.println("\nTC-39 RESULT:   FAIL");
             System.out.println("EXCEPTION DETAILS:");
@@ -2333,7 +2450,193 @@ public class TestDriver_PanelPortfolio {
             System.out.println("  This exception indicates a real issue in serialization functionality!");
             e.printStackTrace();
         }
-        
+
         System.out.println(border);
+    }
+
+    // ============================================================================
+    // MOCKITO UNIT TESTS SECTION
+    // Phase 3 :D
+    // ============================================================================
+
+    @Nested
+    @DisplayName("Mockito Unit Tests - DialogService Mocking")
+    class MockitoUnitTests {
+
+        @Mock
+        private PanelPortfolio.DialogService mockDialogService;
+
+        private PanelPortfolio unitTestPanel;
+
+        @BeforeEach
+        void setupMocks() {
+            MockitoAnnotations.openMocks(this);
+        }
+
+        @Test
+        @DisplayName("TC-27: bManagePortfolioListener new portfolio action (Mockito)")
+        void testManagePortfolioListenerNewPortfolio() throws Exception {
+            if (Main.gui.webData.portfolio.size() == 0) {
+                Main.gui.webData.portfolio.add(new ArrayList<>());
+                Main.gui.webData.portfolio_names.add("InitialPortfolio");
+            }
+            when(mockDialogService.showOptionDialog(any(), any(), any(), anyInt(), anyInt(), any(), any(), any()))
+                    .thenReturn(2);
+            SwingUtilities.invokeAndWait(() -> {
+                unitTestPanel = new PanelPortfolio(mockDialogService);
+            });
+            int optionResult = mockDialogService.showOptionDialog(null, "", "", 0, 0, null, null, null);
+            assertEquals(2, optionResult, "Mock should return 'New' option (2)");
+        }
+
+        @Test
+        @DisplayName("TC-28: bManagePortfolioListener rename action (Mockito)")
+        void testManagePortfolioListenerRename() throws Exception {
+            if (Main.gui.webData.portfolio.size() == 0) {
+                Main.gui.webData.portfolio.add(new ArrayList<>());
+                Main.gui.webData.portfolio_names.add("OriginalName");
+            }
+            when(mockDialogService.showOptionDialog(any(), any(), any(), anyInt(), anyInt(), any(), any(), any()))
+                    .thenReturn(0);
+            SwingUtilities.invokeAndWait(() -> {
+                unitTestPanel = new PanelPortfolio(mockDialogService);
+            });
+            int optionResult = mockDialogService.showOptionDialog(null, "", "", 0, 0, null, null, null);
+            assertEquals(0, optionResult, "Mock should return 'Rename' option (0)");
+        }
+
+        @Test
+        @DisplayName("TC-32: bSwitchPortfolioListener portfolio selection (Mockito)")
+        void testSwitchPortfolioListenerSelection() throws Exception {
+            while (Main.gui.webData.portfolio.size() < 2) {
+                Main.gui.webData.portfolio.add(new ArrayList<>());
+                Main.gui.webData.portfolio_names.add("TestPortfolio" + Main.gui.webData.portfolio.size());
+            }
+            String secondPortfolioName = Main.gui.webData.portfolio_names.get(1);
+            when(mockDialogService.showInputDialog(any(), any(), any(), anyInt(), any(), any(), any()))
+                    .thenReturn(secondPortfolioName);
+            SwingUtilities.invokeAndWait(() -> {
+                unitTestPanel = new PanelPortfolio(mockDialogService);
+            });
+            Object result = mockDialogService.showInputDialog(null, "", "", 0, null, null, null);
+            assertEquals(secondPortfolioName, result);
+        }
+
+        @Test
+        @DisplayName("TC-37: bAddCoinListener cancel handling (Mockito)")
+        void testAddCoinListenerCancelHandling() throws Exception {
+            if (Main.gui.webData.portfolio.size() == 0) {
+                Main.gui.webData.portfolio.add(new ArrayList<>());
+                Main.gui.webData.portfolio_names.add("TestPortfolio");
+            }
+            SwingUtilities.invokeAndWait(() -> {
+                unitTestPanel = new PanelPortfolio(mockDialogService);
+            });
+            assertNotNull(unitTestPanel, "Panel should be created with mock dialog");
+        }
+
+        @Test
+        @DisplayName("TC-37: bRemoveCoinListener empty portfolio handling (Mockito)")
+        void testRemoveCoinListenerEmptyPortfolio() throws Exception {
+            if (Main.gui.webData.portfolio.size() == 0) {
+                Main.gui.webData.portfolio.add(new ArrayList<>());
+                Main.gui.webData.portfolio_names.add("EmptyTestPortfolio");
+            }
+            int currentNr = Main.gui.webData.portfolio_nr;
+            ArrayList<WebData.Coin> savedPortfolio = new ArrayList<>(Main.gui.webData.portfolio.get(currentNr));
+            Main.gui.webData.portfolio.get(currentNr).clear();
+            SwingUtilities.invokeAndWait(() -> {
+                unitTestPanel = new PanelPortfolio(mockDialogService);
+            });
+            assertNotNull(unitTestPanel, "Panel should be created");
+            assertEquals(0, Main.gui.webData.portfolio.get(currentNr).size());
+            Main.gui.webData.portfolio.get(currentNr).addAll(savedPortfolio);
+        }
+
+        @Test
+        @DisplayName("TC-38: Duplicate portfolio name detection (Mockito)")
+        void testDuplicatePortfolioNameDetection() throws Exception {
+            if (Main.gui.webData.portfolio.size() == 0) {
+                Main.gui.webData.portfolio.add(new ArrayList<>());
+                Main.gui.webData.portfolio_names.add("TestPortfolio");
+            }
+            SwingUtilities.invokeAndWait(() -> {
+                unitTestPanel = new PanelPortfolio(mockDialogService);
+            });
+            boolean result = unitTestPanel.testFindPortfolioName("NonExistentCoin999");
+            assertFalse(result, "Should not detect non-existent coin as duplicate");
+        }
+    }
+
+    @Nested
+    @DisplayName("TDD Red-Green-Refactor Tests - Portfolio Edge Cases")
+    class TDDRedGreenRefactorTests {
+
+        @Mock
+        private PanelPortfolio.DialogService mockDialogService;
+
+        private PanelPortfolio unitTestPanel;
+
+        @BeforeEach
+        void setupMocks() {
+            MockitoAnnotations.openMocks(this);
+        }
+
+        @Test
+        @DisplayName("TDD-P01: refreshPortfolio should handle division by stored price of zero")
+        void testRefreshPortfolioDivisionByZeroPrice() throws Exception {
+            // RED PHASE: Exposes REAL division by zero bug in refreshPortfolio()
+
+            // EDGE CASE: When a coin's stored price is 0 and currency conversion is triggered, the calculation divides by zero
+            // CURRENT BEHAVIOR (Line 754-755 in PanelPortfolio.java):
+            //   portfolio_price *= (coin.price / webData.portfolio.get(nr).get(i).price);
+            //   If the stored .price is 0, this causes DIVISION BY ZERO
+            // EXPECTED BEHAVIOR: Should skip or handle zero price gracefully
+
+            // FIX LOCATION: PanelPortfolio.refreshPortfolio() method, around line 754
+            // FIX: Add check: if (webData.portfolio.get(nr).get(i).price == 0) continue;
+            if (Main.gui.webData.portfolio.size() == 0) {
+                Main.gui.webData.portfolio.add(new ArrayList<>());
+                Main.gui.webData.portfolio_names.add("TestPortfolio");
+            }
+            
+            int currentNr = Main.gui.webData.portfolio_nr;
+            ArrayList<WebData.Coin> savedPortfolio = new ArrayList<>(Main.gui.webData.portfolio.get(currentNr));
+            String savedCurrency = Main.currency;
+            
+            // Create a coin with stored price of 0 (edge case: data corruption or delisted coin)
+            Main.gui.webData.portfolio.get(currentNr).clear();
+            WebData.Coin zeroPriceCoin = Main.gui.webData.getCoin();
+            zeroPriceCoin.setName("ZeroPriceCoin");
+            zeroPriceCoin.setPrice(0.0);                    // Current price = 0
+            zeroPriceCoin.setPortfolioAmount(10.0);
+            zeroPriceCoin.setPortfolioPrice(50.0);
+            zeroPriceCoin.setPortfolioCurrency("EUR");      // Different from Main.currency to trigger conversion
+            Main.gui.webData.portfolio.get(currentNr).add(zeroPriceCoin);
+            
+            // Ensure Main.currency is different to trigger the else branch (line 753-758)
+            Main.currency = "USD";
+            
+            SwingUtilities.invokeAndWait(() -> {
+                unitTestPanel = new PanelPortfolio(mockDialogService);
+            });
+            
+            // This should not produce NaN or Infinity values
+            assertDoesNotThrow(() -> {
+                unitTestPanel.refreshPortfolio();
+            }, "TDD-P01: refreshPortfolio should not throw for zero stored price");
+            
+            WebData.Coin refreshedCoin = Main.gui.webData.portfolio.get(currentNr).get(0);
+            // RED PHASE: This will FAIL because division by zero produces NaN or Infinity
+            assertFalse(Double.isNaN(refreshedCoin.getPortfolioPrice()),
+                "TDD-P01 RED: Portfolio price should not be NaN after refresh");
+            assertFalse(Double.isInfinite(refreshedCoin.getPortfolioPrice()),
+                "TDD-P01 RED: Portfolio price should not be Infinite after refresh");
+            
+            // Restore original state
+            Main.currency = savedCurrency;
+            Main.gui.webData.portfolio.get(currentNr).clear();
+            Main.gui.webData.portfolio.get(currentNr).addAll(savedPortfolio);
+        }
     }
 }

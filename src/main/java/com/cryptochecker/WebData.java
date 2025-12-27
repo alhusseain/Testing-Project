@@ -339,5 +339,13 @@ public class WebData {
         public void setPortfolioCurrency(String currency) { portfolio_currency = currency; }
         public void setPortfolioPriceStart(double priceStart) { portfolio_price_start = priceStart; }
         public void setPortfolioValueStart(double valueStart) { portfolio_value_start = valueStart; }
+        
+        // Additional setters for TDD testing
+        public void setName(String name) { this.name = name; }
+        public void setSymbol(String symbol) { this.symbol = symbol; }
+        public void setPrice(double price) { this.price = price; }
+        public void setRank(int rank) { this.rank = rank; }
+        public void setMarketCap(double marketCap) { this.market_cap = marketCap; }
+        public void set24hVolume(double volume) { this._24h_volume = volume; }
     }
 }
